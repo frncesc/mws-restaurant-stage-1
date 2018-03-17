@@ -23,7 +23,7 @@
     "live-server": "^1.2.0"
   },
   "scripts": {
-    "debug": "live-server --open=index.html -V --watch=.",
+    "debug": "live-server --host=localhost --port=8000 --open=index.html -V --watch=.",
     "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
