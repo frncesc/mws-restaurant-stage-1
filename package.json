@@ -1,0 +1,29 @@
+{
+  "name": "mws-restaurant-stage1",
+  "version": "1.0.0",
+  "description": "Project for the \"Mobile Web Specialist\" Udacity nanodegree - Stage 1",
+  "main": "none",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/frncesc/mws-restaurant-stage-1.git"
+  },
+  "keywords": [
+    "web",
+    "development",
+    "accessibility",
+    "responsiveness"
+  ],
+  "author": "Francesc Busquets <francesc@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/frncesc/mws-restaurant-stage-1/issues"
+  },
+  "homepage": "https://github.com/frncesc/mws-restaurant-stage-1#readme",
+  "devDependencies": {
+    "live-server": "^1.2.0"
+  },
+  "scripts": {
+    "debug": "live-server --open=index.html -V --watch=.",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
