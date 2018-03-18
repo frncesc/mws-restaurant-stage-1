@@ -76,7 +76,7 @@ nav h1 a {
     padding: 0.8rem;
     list-style: none;
     background-color: #eee;
-    font-size: 17px;
+    font-size: 12pt;
     margin: 0;
     line-height: 1;
 }
@@ -192,14 +192,12 @@ nav h1 a {
 }
 
 .inside main {
-  margin-top: 7rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(375px, 1fr));  
+  padding-top: calc(3.6rem + 26pt);
 }
 
 .inside #map-container {
   background: blue none repeat scroll 0 0;
-  height: 80vh;
+  height: 60vh;
 }
 .inside #map {
   background-color: #ccc;
@@ -237,14 +235,16 @@ nav h1 a {
 	width: 90%;
 }
 #restaurant-container, #reviews-container {
+  max-width: 30rem;
+  margin: auto;
+  padding: 1rem;
   border-bottom: 1px solid #d9d9d9;
   border-top: 1px solid #fff;
-  padding: 140px 40px 30px;
-  width: 50%;
 }
+
 #reviews-container {
-  padding: 30px 40px 80px;
 }
+
 #reviews-container h2 {
   color: #f58500;
   font-size: 24pt;
@@ -280,5 +280,8 @@ nav h1 a {
     font-size: 11pt;
   }
   
+  .inside main {
+    padding-top: calc(3.6rem + 20pt);
+  }
 
 }
