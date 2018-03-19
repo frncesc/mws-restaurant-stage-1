@@ -40,11 +40,13 @@ h1, h2, h3, h4, h5, h6 {
 article, aside, canvas, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
 	display: block;
 }
+
 #maincontent {
   display: grid;
   grid-template-columns: 1fr;
   background-color: #f3f3f3;
 }
+
 #footer {
   background-color: #444;
   color: #aaa;
@@ -54,7 +56,9 @@ article, aside, canvas, details, figcaption, figure, footer, header, hgroup, men
   text-align: center;
   text-transform: uppercase;
 }
+
 /* ====================== Navigation ====================== */
+
 nav {
   padding: 1rem;
   background-color: #252831;
@@ -63,8 +67,8 @@ nav {
 
 nav h1 {
   margin: auto;
-  line-height: 1.1em;
-  font-size: 14pt;
+  line-height: 2em;
+  font-size: 16pt;
   font-weight: 200;
   letter-spacing: 0.3em;
   text-transform: uppercase;
@@ -75,10 +79,10 @@ nav h1 a {
 }
 
 #breadcrumb {
-    padding: 0.8rem;
+    padding: 1em;
     list-style: none;
     background-color: #eee;
-    font-size: 12pt;
+    font-size: 16pt;
     margin: 0;
     line-height: 1;
 }
@@ -86,6 +90,7 @@ nav h1 a {
 /* Display list items side by side */
 #breadcrumb li {
     display: inline;
+    font-size: unset;
 }
 
 /* Add a slash symbol (/) before/behind each list item */
@@ -156,7 +161,7 @@ nav h1 a {
   background-color: #ccc;
   display: block;
   margin: 0;
-  xwidth: 100%;
+  width: 100%;
 }
 #restaurants-list li h1 {
   color: #f18200;
@@ -218,7 +223,9 @@ nav h1 a {
   line-height: 1.1;
 }
 #restaurant-img {
-	width: 90%;
+  width: 90%;
+  border-top-left-radius: 24px;
+  border-bottom-right-radius: 24px;  
 }
 #restaurant-address {
   font-size: 12pt;
@@ -260,15 +267,18 @@ nav h1 a {
 }
 #reviews-list li {
   background-color: #fff;
-    border: 2px solid #f3f3f3;
+  border: 2px solid #f3f3f3;
+  border-top-left-radius: 24px;
+  border-bottom-right-radius: 24px;    
   display: block;
   list-style-type: none;
-  margin: 0 0 30px;
+  margin: 0 0 2em;
   overflow: hidden;
-  padding: 0 20px 20px;
+  padding: 1.5em;
   position: relative;
   width: 85%;
 }
+
 #reviews-list li p {
   margin: 0 0 10px;
 }
@@ -290,7 +300,6 @@ nav h1 a {
 @media screen and (min-width: 900px) {
   .inside #maincontent {
     grid-template-columns: 1fr 1fr;
-    max-width: 1400px;
     margin: auto;
   }
 
