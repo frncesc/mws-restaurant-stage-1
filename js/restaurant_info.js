@@ -95,9 +95,8 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
  */
 fillReviewsHTML = (reviews = self.restaurant.reviews) => {
   const container = document.getElementById('reviews-container');
-  const title = document.createElement('h2');
-  title.innerHTML = 'Reviews';
-  container.appendChild(title);
+  const title = document.getElementById('reviews-title');
+  title.innerHTML = 'Reviews';  
 
   if (!reviews) {
     const noReviews = document.createElement('p');
@@ -105,44 +104,42 @@ fillReviewsHTML = (reviews = self.restaurant.reviews) => {
     container.appendChild(noReviews);
     return;
   }
-  const ul = document.getElementById('reviews-list');
+  
   reviews.forEach(review => {
-    ul.appendChild(createReviewHTML(review));
-  });
-  container.appendChild(ul);
+    container.appendChild(createReviewHTML(review));
+  });  
 }
 
 /**
  * Create review HTML and add it to the webpage.
  */
 createReviewHTML = (review) => {
-  const li = document.createElement('li');
+  const article = document.createElement('article');
 
-  const header = document.createElement('div');
-  header.className = 'header';
-  
-  const name = document.createElement('p');
-  name.className = 'name';
+  const header = document.createElement('header');
+    
+  const name = document.createElement('div');
+  name.className = 'review-author';
   name.innerHTML = review.name;
   header.appendChild(name);
-
-  const date = document.createElement('p');
-  date.className = 'date';
+  
+  const date = document.createElement('div');
+  date.className = 'review-date';
   date.innerHTML = review.date;
   header.appendChild(date);
 
-  li.appendChild(header);
+  article.appendChild(header);
 
   const rating = document.createElement('p');
-  rating.className = 'rating';
+  rating.className = 'review-rating';
   rating.innerHTML = `Rating: ${review.rating}`;
-  li.appendChild(rating);
+  article.appendChild(rating);
 
   const comments = document.createElement('p');
   comments.innerHTML = review.comments;
-  li.appendChild(comments);
+  article.appendChild(comments);
 
-  return li;
+  return article;
 }
 
 /**
