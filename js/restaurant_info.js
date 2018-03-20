@@ -130,7 +130,7 @@ createReviewHTML = (review) => {
 
   article.appendChild(header);
 
-  const rating = document.createElement('p');
+  const rating = document.createElement('div');
   rating.className = 'review-rating';
   rating.innerHTML = `Rating: ${review.rating}`;
   article.appendChild(rating);
