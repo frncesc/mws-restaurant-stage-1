@@ -12,7 +12,7 @@ html {
   --shadow: #ccc;
   --dark: #252831;
   --accent: #2d5dca;
-  --link: #0275d8;
+  --accent-over-dark: yellow;
   --soft-accent: #66bbff;
 }
 
@@ -41,8 +41,8 @@ a {
 	color: var(--accent);
 	text-decoration: none;
 }
-  a:hover, a:focus {
-	color: var(--link);
+a:hover, a:focus {
+	color: var(--accent);
 	text-decoration: none;
 }
 a img{
@@ -93,6 +93,10 @@ body > header h1 a {
   color: var(--paper);
 }
 
+body > header h1 a:focus,a:hover {
+  color: var(--accent-over-dark);
+}
+
 #breadcrumb {
     padding: 1em;
     list-style: none;
@@ -117,7 +121,7 @@ body > header h1 a {
 
 /* Add a color to all links inside the list */
 #breadcrumb li a {
-    color: var(--link);
+    color: var(--accent);
     text-decoration: none;
 }
 
