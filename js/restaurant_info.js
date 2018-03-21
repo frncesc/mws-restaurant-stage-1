@@ -120,11 +120,13 @@ createReviewHTML = (review) => {
     
   const name = document.createElement('div');
   name.className = 'review-author';
+  name.setAttribute('aria-label', 'Review author');
   name.innerHTML = review.name;
   header.appendChild(name);
   
   const date = document.createElement('div');
   date.className = 'review-date';
+  date.setAttribute('aria-label', 'Review date');
   date.innerHTML = review.date;
   header.appendChild(date);
 
