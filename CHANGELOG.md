@@ -1,3 +1,8 @@
+### Resize images to different resolutions
+- The script `resize-images.js` uses [Sharp](https://github.com/lovell/sharp) for resizing all images in `img`
+  to widths 340, 400, 600 and 800 pixels. The resulting images are stored with its original file name into the
+  directories: `img-340`, `img-400`, etc.
+
 ### Improve accessibility
 - Add wai-aria attributes to html elements
 - Enforce semantic landmarks

@@ -154,6 +154,13 @@ class DBHelper {
   }
 
   /**
+   * Restaurant image file.
+   */
+  static imageFileForRestaurant(restaurant) {
+    return restaurant.photograph;
+  }
+
+  /**
    * Map marker for a restaurant.
    */
   static mapMarkerForRestaurant(restaurant, map) {
