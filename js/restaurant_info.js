@@ -56,8 +56,13 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   address.innerHTML = restaurant.address;
 
   const image = document.getElementById('restaurant-img');
+  const fileName = DBHelper.imageFileForRestaurant(restaurant);
+
   image.className = 'restaurant-img'
-  image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  image.setAttribute('sizes', 'calc(100vw - 2rem)');
+  image.setAttribute('srcset', DBHelper.imgSizes().map(size => `/img-${size}/${fileName} ${size}w`).join(', ') + `, /img/${fileName}`);
+  image.src = `/img-800/${fileName}`;
+  // image.src = DBHelper.imageUrlForRestaurant(restaurant);
 
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = restaurant.cuisine_type;
@@ -96,7 +101,7 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
 fillReviewsHTML = (reviews = self.restaurant.reviews) => {
   const container = document.getElementById('reviews-container');
   const title = document.getElementById('reviews-title');
-  title.innerHTML = 'Reviews';  
+  title.innerHTML = 'Reviews';
 
   if (!reviews) {
     const noReviews = document.createElement('p');
@@ -104,10 +109,10 @@ fillReviewsHTML = (reviews = self.restaurant.reviews) => {
     container.appendChild(noReviews);
     return;
   }
-  
+
   reviews.forEach(review => {
     container.appendChild(createReviewHTML(review));
-  });  
+  });
 }
 
 /**
@@ -117,13 +122,13 @@ createReviewHTML = (review) => {
   const article = document.createElement('article');
 
   const header = document.createElement('header');
-    
+
   const name = document.createElement('div');
   name.className = 'review-author';
   name.setAttribute('aria-label', 'Review author');
   name.innerHTML = review.name;
   header.appendChild(name);
-  
+
   const date = document.createElement('div');
   date.className = 'review-date';
   date.setAttribute('aria-label', 'Review date');
@@ -147,7 +152,7 @@ createReviewHTML = (review) => {
 /**
  * Add restaurant name to the breadcrumb navigation menu
  */
-fillBreadcrumb = (restaurant=self.restaurant) => {
+fillBreadcrumb = (restaurant = self.restaurant) => {
   const breadcrumb = document.getElementById('breadcrumb');
   const li = document.createElement('li');
   li.innerHTML = restaurant.name;

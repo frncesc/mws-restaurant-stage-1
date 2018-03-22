@@ -19,6 +19,7 @@ imgPaths.forEach(path => {
   }
 })
 
+console.log('Resizing images...')
 fs.readdirSync(imgSrc).forEach(f => {
   const src = path.resolve(imgSrc, f)
   sizes.forEach((size, i) => {

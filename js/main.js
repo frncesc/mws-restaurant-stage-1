@@ -132,24 +132,19 @@ fillRestaurantsHTML = (restaurants = self.restaurants) => {
   addMarkersToMap();
 }
 
-const imgSizes = [340, 400, 600, 800];
 /**
  * Create restaurant HTML.
  */
 createRestaurantHTML = (restaurant) => {
-  console.log(window.innerWidth)
   const fileName = DBHelper.imageFileForRestaurant(restaurant);
-  const srcset = imgSizes.map(size => `/img-${size}/${fileName} ${size}w`).join(', ')
-  const sizes = imgSizes.map(size => `(max-width:${size + 20}px) ${size}px`).join(', ') + ', 800px'
-
   const li = document.createElement('li');
   const image = document.createElement('img');
   image.setAttribute('alt', 'Restaurant picture');
-  image.setAttribute('sizes', sizes);
-  image.setAttribute('srcset', srcset);
+  image.setAttribute('sizes', 'calc(100vw - 2rem)');
+  image.setAttribute('srcset', DBHelper.imgSizes().map(size => `/img-${size}/${fileName} ${size}w`).join(', ') + `, /img/${fileName}`);
   image.className = 'restaurant-img';
+  image.src = `/img-400/${fileName}`;
   //image.src = DBHelper.imageUrlForRestaurant(restaurant);
-  image.src = `/img-340/${fileName}`;
   li.append(image);
 
   const name = document.createElement('h1');
