@@ -1,7 +1,20 @@
+### Use a service worker, thus allowing the site to work off-line
+- Added a basic service worker adapted from:
+  https://github.com/GoogleChrome/samples/tree/gh-pages/service-worker
+- Use `ignoreSearch: true` option in `caches.match` to have `restaurant.html` always cached
+- Modify the start-up sequence in `main.js`, calling `updateRestaurants` in
+  response to `DOMContentLoaded` window event to prevent possible off-line failures when
+  Google Maps is not available. Now `initMap` just updates the restaurant markers.
+- Check always the `map` parameter in `DBHelper.mapMarkerForRestaurant`. It can be _null_
+  if Google Maps API is not loaded (because we are off-line, or by other reasons)
+
 ### Resize images to different resolutions
 - The script `resize-images.js` uses [Sharp](https://github.com/lovell/sharp) for resizing all images in `img`
-  to widths 340, 400, 600 and 800 pixels. The resulting images are stored with its original file name into the
+  to 340, 400, 600 and 800 pixel width. The resulting images are stored with its original file name into the
   directories: `img-340`, `img-400`, etc.
+  (Note: launch `npm i` to install the required components before calling `npm run resize-images`)
+- Use `sizes` and `srcset` attributes in `img` tags to inform the browser about the most convenient image file
+  for the current screen size and resolution.
 
 ### Improve accessibility
 - Add wai-aria attributes to html elements
