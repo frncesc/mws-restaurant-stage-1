@@ -168,7 +168,7 @@ createRestaurantHTML = (restaurant) => {
  * Add markers for current restaurants to the map.
  */
 addMarkersToMap = (restaurants = self.restaurants) => {
-  if (self.map) {
+  if (restaurants && self.map) {
     restaurants.forEach(restaurant => {
       // Add marker to the map
       const marker = DBHelper.mapMarkerForRestaurant(restaurant, self.map);
@@ -205,8 +205,9 @@ window.initMap = () => {
   });
   // Moved to `DOMContentLoaded` event
   // updateRestaurants();
-  // Just reset markers
-  resetMarkers();
+  // Just reset markers if `restaurants` has already been initialized
+  if(self.restaurants)
+    resetMarkers();
 }
 
 // Call `updateRestaurants` when DOM is loaded
