@@ -136,15 +136,14 @@ createRestaurantHTML = (restaurant) => {
   const fileName = DBHelper.imageFileForRestaurant(restaurant);
   const li = document.createElement('li');
   const image = document.createElement('img');
-  image.setAttribute('alt', 'Restaurant picture');
-  image.setAttribute('sizes', 'calc(100vw - 2rem)');
-  image.setAttribute('srcset', DBHelper.imgSizes().map(size => `/img-${size}/${fileName} ${size}w`).join(', ') + `, /img/${fileName}`);
+  image.alt = 'Restaurant picture';
+  image.sizes = 'calc(100vw - 2rem)';
+  image.srcset = DBHelper.imgSizes().map(size => `/img-${size}/${fileName} ${size}w`).join(', ') + `, /img/${fileName}`;
   image.className = 'restaurant-img';
-  image.src = `/img-400/${fileName}`;
-  //image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  image.src = `/img-400/${fileName}`;  
   li.append(image);
 
-  const name = document.createElement('h1');
+  const name = document.createElement('h3');
   name.innerHTML = restaurant.name;
   li.append(name);
 

@@ -184,7 +184,7 @@ body > header h1 a:focus,a:hover {
   margin: 0;
   width: 100%;
 }
-#restaurants-list li h1 {
+#restaurants-list li h3 {
   color: var(--accent);
   font-family: Arial,sans-serif;
   font-size: 14pt;

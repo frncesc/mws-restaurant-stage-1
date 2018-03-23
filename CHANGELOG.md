@@ -1,3 +1,7 @@
+### Accessibility improvements
+- Set `alt` attributes to all images
+- Use `h3` instead of `h1` for the restaurant name in restaurants list
+
 ### Use a service worker, thus allowing the site to work off-line
 - Added a basic service worker adapted from:
   https://github.com/GoogleChrome/samples/tree/gh-pages/service-worker
