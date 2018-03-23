@@ -1,6 +1,12 @@
 ### Accessibility improvements
 - Set `alt` attributes to all images
 - Use `h3` instead of `h1` for the restaurant name in restaurants list
+- Add `main` role to `main` elements in .html files
+- Use of `h2` for restaurant name in restaurant.html (use `h1` just for the page title)
+- Use of `h3` for reviews title (because it has lower importance than the restaurant name)
+- Request service worker registration also from `restaurant_info.js`
+- Put a more descriptive `alt` text in pictures, mentioning the restaurant name
+- Create a descriptive `README.md` (work in progress)
 
 ### Use a service worker, thus allowing the site to work off-line
 - Added a basic service worker adapted from:

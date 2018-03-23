@@ -276,7 +276,7 @@ body > header h1 a:focus,a:hover {
 
 
 /* ====================== Restaurant Reviews ====================== */
-#reviews-container h2 {
+#reviews-container h3 {
   color: var(--accent);
   font-size: 24pt;
   font-weight: 300;

@@ -1,3 +1,13 @@
+/**
+ * Register service worker
+ */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js');
+}
+
+/**
+ * Common variables
+ */
 let restaurant;
 var map;
 
@@ -59,7 +69,7 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   const fileName = DBHelper.imageFileForRestaurant(restaurant);
 
   image.className = 'restaurant-img';
-  image.alt = 'Restaurant picture';
+  image.alt = `${restaurant.name} restaurant photo`;
   image.sizes = 'calc(100vw - 2rem)';
   image.srcset = DBHelper.imgSizes().map(size => `/img-${size}/${fileName} ${size}w`).join(', ') + `, /img/${fileName}`;
   image.src = `/img-800/${fileName}`;
