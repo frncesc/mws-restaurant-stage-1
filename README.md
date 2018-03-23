@@ -1,28 +1,46 @@
 # Mobile Web Specialist Certification Course
----
+
 #### _Three Stage Course Material Project - Restaurant Reviews_
 
-## Project Overview: Stage 1
+## Stage 1
 
-For the **Restaurant Reviews** projects, you will incrementally convert a static webpage to a mobile-ready web application. In **Stage One**, you will take a static design that lacks accessibility and convert the design to be responsive on different sized displays and accessible for screen reader use. You will also add a service worker to begin the process of creating a seamless offline experience for your users.
+### Site overview
 
-### Specification
+At this stage, the site is dynamically built with the information of `data/restaurants.json` and the photos stored in `/img`.
 
-You have been provided the code for a restaurant reviews website. The code has a lot of issues. It’s barely usable on a desktop browser, much less a mobile device. It also doesn’t include any standard accessibility features, and it doesn’t work offline at all. Your job is to update the code to resolve these issues while still maintaining the included functionality. 
+The site pivots between the main page `index.html` and specific information and reviews about each restaurant, presented in `restaurant.html`.
 
-### What do I do from here?
+A _Google Maps_ widget is embedded in each page, showing markers with the location of each restaurant.
 
-1. In this folder, start up a simple HTTP server to serve up the site files on your local computer. Python has some simple tools to do this, and you don't even need to know Python. For most people, it's already installed on your computer. 
+This project was originally forked from https://github.com/udacity/mws-restaurant-stage-1
+The list of the changes introduced on the original project is detailed in [CHANGELOG.md](https://github.com/frncesc/mws-restaurant-stage-1/blob/master/CHANGELOG.md).
 
-In a terminal, check the version of Python you have: `python -V`. If you have Python 2.x, spin up the server with `python -m SimpleHTTPServer 8000` (or some other port, if port 8000 is already in use.) For Python 3.x, you can use `python3 -m http.server 8000`. If you don't have Python installed, navigate to Python's [website](https://www.python.org/) to download and install the software.
+### Building the site components
 
-2. With your server running, visit the site: `http://localhost:8000`, and look around for a bit to see what the current experience looks like.
-3. Explore the provided code, and make start making a plan to implement the required features in three areas: responsive design, accessibility and offline use.
-4. Write code to implement the updates to get this site on its way to being a mobile-ready website.
+This project uses [Node.js](https://nodejs.org) and [NPM packages](https://www.npmjs.com/) to prepare and serve different components on the development environment. Please refer to the [Node.js downloads page](https://nodejs.org/en/download/) for more information about how to install Node.js and NPM on different platforms.
 
-### Note about ES6
+To download and install the project's required components, just go to its root folder and launch:
 
-Most of the code in this project has been written to the ES6 JavaScript specification for compatibility with modern web browsers and future proofing JavaScript code. As much as possible, try to maintain use of ES6 in any additional JavaScript you write. 
+```
+$ npm install
+```
 
+The site uses restaurant pictures scaled to different resolutions to match the requirements of each device and minimize download sizes and waiting times. In order to build the scaled images, just launch:
 
+```
+$ npm run resize-images
+```
 
+The image resizing is done in `resize-images.js` using the [sharp](http://sharp.pixelplumbing.com/en/stable/) NPM package.
+
+### Testing the site
+
+You can use this command to launch a live development server:
+
+```
+$ npm run debug
+```
+
+This will open your default browser with the project's main page. The site is automatically reloaded when it detects changes in any file.
+
+The site is served by default on port `8000`, but you can change it in `package.json` if needed (see `debug` params in the `scripts` section)
