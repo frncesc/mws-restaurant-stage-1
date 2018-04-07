@@ -1,3 +1,10 @@
+### Pull data from the development server
+- Define the `DBHelper.API_ENDPOINT` constant, pointing to the server root service (in substitution of `DATABASE_URL`, not yet used).
+- Adapt `DBHelper.fetchRestaurants` to read the array of records returned by the server.
+- Adapt `DBHelper.fetchRestaurantById` to retrieve data related to just one restaurant.
+- Remove `data/restaurants.json` from `PRECACHE_URLS` in service worker (we will not need it anymore)
+- Add the `.jpg` file extension to `DBHelper.imageFileForRestaurant` and `DBHelper.imageUrlForRestaurant` (the server returns just the base file name)
+
 ### Accessibility improvements
 - Set `alt` attributes to all images
 - Use `h3` instead of `h1` for the restaurant name in restaurants list
