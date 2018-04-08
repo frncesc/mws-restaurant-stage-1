@@ -17,7 +17,7 @@ class DBHelper {
    */
   static get API_ENDPOINT() {
     const port = 1337 // Change this to your server port
-    return `http://localhost:${port}/restaurants`;    
+    return `http://localhost:${port}/restaurants`;
   }
 
   /**
@@ -153,13 +153,6 @@ class DBHelper {
   }
 
   /**
-   * Restaurant image URL.
-   */
-  static imageUrlForRestaurant(restaurant) {
-    return (`/img/${restaurant.photograph}.jpg`);
-  }
-
-  /**
    * Restaurant image sizes
    */
   static imgSizes() {
@@ -170,7 +163,15 @@ class DBHelper {
    * Restaurant image file.
    */
   static imageFileForRestaurant(restaurant) {
-    return `${restaurant.photograph}.jpg`;
+    // Check for the existence and real content of `restaurant.photograph` (can be zero!)
+    return (restaurant.photograph || restaurant.photograph === 0) ? `${restaurant.photograph}.jpg` : 'generic.png';
+  }
+
+  /**
+   * Restaurant image URL.
+   */
+  static imageUrlForRestaurant(restaurant) {
+    return (`/img/${imageFileForRestaurant(restaurant)}`);
   }
 
   /**
