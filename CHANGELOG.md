@@ -1,3 +1,16 @@
+### Store restaurant data into IndexedDB
+- Add Jake Archibald's [IDB](https://github.com/jakearchibald/idb) package to `package.json`. Then, copy `/node_modules/idb/lib/idb.js` into `/js` (don't `require` modules by now) and import it in `index.html` and `restaurants.html`.
+- Create new methods in `DBHelper` to deal with IndexedDb:
+  - `getIdbPromise`: To gain access to the database
+  - `getRestaurantPromiseFromIDB`: To retrieve data related to a specific restaurant from IDB
+  - `saveRestaurantToIdb`: To add a restaurant record into IDB
+  - `saveRestaurantIfNewer`: Checks if a restaurant with the given ID already exists and has updated data proor to add or update the restaurant record into the IDB.
+  - `saveAllRestaurantsIfNewer`: Performs the previous operation with a collection of restaurants.
+- Update `DBHelper.fetchRestaurants` to save the obtained restaurant data into IDB.
+
+### Add generic photograph
+- Created a generic image for restaurants with the `photograph` field empty or undefined.
+
 ### Pull data from the development server
 - Define the `DBHelper.API_ENDPOINT` constant, pointing to the server root service (in substitution of `DATABASE_URL`, not yet used).
 - Adapt `DBHelper.fetchRestaurants` to read the array of records returned by the server.
