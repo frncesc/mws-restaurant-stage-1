@@ -74,8 +74,8 @@ class DBHelper {
 
   /**
    * Gets a restaurant record from the IndexdedDB
-   * @param {number|string} id - The main identifier of the requested restaurant (currently a number)
-   * @returns {Promise} - Resolves with an object of type `restaurant` or _null_ if was not found.
+   * @param {number} id - The main identifier of the requested restaurant (currently a number)
+   * @returns {Promise} - Resolves with an object of type `restaurant` or _null_ if not found.
    */
   static getRestaurantPromiseFromIDB(id) {
     return DBHelper.getIdb().then(db => {
@@ -83,6 +83,19 @@ class DBHelper {
         .objectStore(DBHelper.IDB_STORE)
         .get(id)
         .then(record => record ? record.data : null);
+    });
+  }
+  
+  /**
+   * Gets all restaurants from the IndexdedDB
+   * @returns {Promise} - Resolves with an array of objects of type `restaurant`, or _null_ if none found.
+   */
+  static getAllRestaurantsPromiseFromIDB() {
+    return DBHelper.getIdb().then(db => {
+      return db.transaction(DBHelper.IDB_STORE)
+        .objectStore(DBHelper.IDB_STORE)
+        .getAll()
+        .then(allObjs => allObjs ? allObjs.map(obj => obj.data) : null);
     });
   }
 
@@ -145,7 +158,11 @@ class DBHelper {
       return Promise.resolve(DBHelper._RESTAURANTS);
 
     return fetch(DBHelper.API_ENDPOINT)
-      .then(response => response.json())
+      .then(response => {
+        if (response.ok)
+          return response.json();
+        throw new Error('Bad network response');
+      })
       .then(restaurants => {
         // Save `restaurants` for later use
         DBHelper._RESTAURANTS = restaurants;
@@ -158,14 +175,18 @@ class DBHelper {
         return restaurants;
       })
       .catch(err => {
-        console.log(err);
-        console.log(`Error requesting the restaurants list: ${err}`);
+        // Maybe we are off-line? Try to get data from IDB
+        return DBHelper.getAllRestaurantsPromiseFromIDB()
+          .catch(idbErr => {
+            console.log(`Error requesting the restaurants list: ${err}`);
+            throw new Error(idbErr);
+          });
       });
   }
 
   /**
    * Fetch a restaurant by its ID
-   * @param {number|string} id - The main identifier of the requested restaurant (currently a number)
+   * @param {number} id - The main identifier of the requested restaurant (currently a number)
    * @returns {Promise} - Resolves with a `restaurant` object, or _null_ if not exists
    */
   static fetchRestaurantById(id) {
@@ -177,7 +198,11 @@ class DBHelper {
     }
 
     return fetch(`${DBHelper.API_ENDPOINT}/${id}`)
-      .then(response => response.json())
+      .then(response => {
+        if (response.ok)
+          return response.json();
+        throw new Error('Bad network response');
+      })
       .then(restaurant => {
         // Initialize `_RESTAURANTS` if needed
         DBHelper._RESTAURANTS = DBHelper._RESTAURANTS || [];
@@ -187,7 +212,12 @@ class DBHelper {
         return restaurant;
       })
       .catch(err => {
-        console.log(`Error requesting restaurant data with ID "${id}": ${err}`);
+        // Maybe we are off-line? Try to get data from IDB
+        return DBHelper.getRestaurantPromiseFromIDB(id)
+          .catch(idbErr => {
+            console.log(`Error requesting restaurant data with ID "${id}": ${err}`);
+            throw new Error(idbErr);
+          })
       });
   }
 

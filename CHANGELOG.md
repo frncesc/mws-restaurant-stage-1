@@ -1,3 +1,9 @@
+### Use data stored in IndexedDB when off-line
+- Create the method `DBHelper.getAllRestaurantsPromiseFromIDB` to read all restaurant data from IDB.
+- Modify the `catch` methods of `fetchRestaurants` and `fetchRestaurantById` to read data from IDB when a network error occurs.
+- Make sure `fetch` answers are always valid by checking `response.ok`, throwing error otherwhise (thus allowing to read data from IDB)
+- Check that `restaurant.id` is always a number, as expected by IDB.
+
 ### Miscellaneous improvements
 - Use of `fetch` calls instead of XHR requests. More flexible and Promise-based.
 - Use ES6 global objects of type [Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set) to obtain the lists of cuisines and neighborhoods without duplicates.
@@ -8,13 +14,13 @@
 - Refactor methods in `DBHelper` currently using callback functions in order to return objects of type `Promise`, more flexible and compatible with IDB.
 - Convert callback functions in `main.js` and `restaurant_info.js`, making them consumers and/or producers of `Promise` objects.
 
-### Store restaurant data into IndexedDB
+### Store restaurant data in IndexedDB
 - Add Jake Archibald's [IDB](https://github.com/jakearchibald/idb) package to `package.json`. Then, copy `/node_modules/idb/lib/idb.js` into `/js` (don't `require` modules by now) and import it in `index.html` and `restaurants.html`.
 - Create new methods in `DBHelper` to deal with IndexedDb:
   - `getIdbPromise`: To gain access to the database
   - `getRestaurantPromiseFromIDB`: To retrieve data related to a specific restaurant from IDB
-  - `saveRestaurantToIdb`: To add a restaurant record into IDB
-  - `saveRestaurantIfNewer`: Checks if a restaurant with the given ID already exists and has updated data proor to add or update the restaurant record into the IDB.
+  - `saveRestaurantToIdb`: To add a restaurant record to IDB
+  - `saveRestaurantIfNewer`: Checks if a restaurant with the given ID already exists and has updated data proor to add or update the restaurant record in IDB.
   - `saveAllRestaurantsIfNewer`: Performs the previous operation with a collection of restaurants.
 - Update `DBHelper.fetchRestaurants` to save the obtained restaurant data into IDB.
 - Add `js/idb.js` to `PRECACHE_URLS` in `service-worker.js`

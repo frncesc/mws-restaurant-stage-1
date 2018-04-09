@@ -39,8 +39,9 @@ fetchRestaurantFromURL = () => {
   const id = getParameterByName('id');
   if (!id) // no id found in URL
     return Promise.reject('No restaurant id in URL');
-  else
-    return DBHelper.fetchRestaurantById(id)
+  else {
+    // `id` must be a number
+    return DBHelper.fetchRestaurantById(parseInt(id))
       .then(restaurant => {
         if (!restaurant)
           return Promise.reject(`Unknown restaurant "${id}"`);
@@ -49,6 +50,7 @@ fetchRestaurantFromURL = () => {
         fillRestaurantHTML();
         return restaurant;
       });
+  }
 }
 
 /**
@@ -106,7 +108,7 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
  */
 fillReviewsHTML = (reviews = self.restaurant.reviews) => {
   const container = document.getElementById('reviews-container');
-  
+
   const title = document.getElementById('reviews-title');
   title.innerHTML = 'Reviews';
 
@@ -128,7 +130,7 @@ fillReviewsHTML = (reviews = self.restaurant.reviews) => {
 createReviewHTML = (review) => {
   const article = document.createElement('article');
   const header = document.createElement('header');
-  
+
   const name = document.createElement('div');
   name.className = 'review-author';
   name.setAttribute('aria-label', 'Review author');
@@ -160,7 +162,7 @@ createReviewHTML = (review) => {
  */
 fillBreadcrumb = (restaurant = self.restaurant) => {
   const breadcrumb = document.getElementById('breadcrumb');
-  
+
   const li = document.createElement('li');
   li.innerHTML = restaurant.name;
   breadcrumb.appendChild(li);
