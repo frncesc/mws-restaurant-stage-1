@@ -8,11 +8,11 @@ if ('serviceWorker' in navigator) {
 /**
  * Common variables
  */
-let restaurants,
-  neighborhoods,
-  cuisines
-var map
-var markers = []
+self.restaurants = [];
+self.neighborhoods = [];
+self.cuisines = [];
+self.map = null;
+self.markers = [];
 
 /**
  * Fetch neighborhoods and cuisines as soon as the page is loaded, and update restaurants
@@ -67,7 +67,6 @@ fetchCuisines = () => {
  */
 fillCuisinesHTML = (cuisines = self.cuisines) => {
   const select = document.getElementById('cuisines-select');
-
   cuisines.forEach(cuisine => {
     const option = document.createElement('option');
     option.innerHTML = cuisine;
@@ -75,7 +74,6 @@ fillCuisinesHTML = (cuisines = self.cuisines) => {
     select.append(option);
   });
 }
-
 
 /**
  * Update page and map for current restaurants.
@@ -91,11 +89,12 @@ updateRestaurants = () => {
   const cuisine = cSelect[cIndex].value;
   const neighborhood = nSelect[nIndex].value;
 
-  return DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood).then(restaurants => {
-    resetRestaurants(restaurants);
-    fillRestaurantsHTML();
-    return restaurants;
-  })
+  return DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood)
+    .then(restaurants => {
+      resetRestaurants(restaurants);
+      fillRestaurantsHTML();
+      return restaurants;
+    });
 }
 
 /**
@@ -153,9 +152,9 @@ createRestaurantHTML = (restaurant) => {
   const more = document.createElement('a');
   more.innerHTML = 'View Details';
   more.href = DBHelper.urlForRestaurant(restaurant);
-  li.append(more)
+  li.append(more);
 
-  return li
+  return li;
 }
 
 /**

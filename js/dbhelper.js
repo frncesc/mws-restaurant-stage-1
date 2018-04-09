@@ -60,11 +60,10 @@ class DBHelper {
       return Promise.resolve(DBHelper._IDB);
     else
       return idb.open(DBHelper.IDB_NAME, DBHelper.IDB_VERSION, upgradeDB => {
-        // Note: we don't use 'break' in this switch statement,
-        // the fall-through behaviour is what we want.
         switch (upgradeDB.oldVersion) {
           case 0:
             upgradeDB.createObjectStore(DBHelper.IDB_STORE, { keyPath: 'id' });
+          // space reserved for future updates...
         }
       }).then(db => {
         // Store `db` for later use
@@ -76,14 +75,14 @@ class DBHelper {
   /**
    * Gets a restaurant record from the IndexdedDB
    * @param {number|string} id - The main identifier of the requested restaurant (currently a number)
-   * @returns {Promise} - Resolves with an object of type `restaurant`
+   * @returns {Promise} - Resolves with an object of type `restaurant` or _null_ if was not found.
    */
   static getRestaurantPromiseFromIDB(id) {
     return DBHelper.getIdb().then(db => {
       return db.transaction(DBHelper.IDB_STORE)
         .objectStore(DBHelper.IDB_STORE)
         .get(id)
-        .then(record => record.data);
+        .then(record => record ? record.data : null);
     });
   }
 
@@ -113,11 +112,11 @@ class DBHelper {
     return DBHelper.getRestaurantPromiseFromIDB(restaurant.id)
       .then(currentData => {
         // `restaurant.updatedAt` should be in ISO format, so we can perform a direct string comparision
-        if (currentData && currentData.updatedAt >= restaurant.updatedAt) {
-          console.log(`"${restaurant.name}" already exists on the database`);
+        if (restaurant.updatedAt && currentData && currentData.updatedAt >= restaurant.updatedAt) {
+          console.log(`"${restaurant.name}" is already updated in the database`);
           return true;
         } else {
-          console.log(`"${restaurant.name}" ${currentData ? 'updated on' : 'added to'} the database`)
+          console.log(`"${restaurant.name}" ${currentData ? 'updated in' : 'added to'} the database`)
           return DBHelper.saveRestaurantToIdb(restaurant);
         }
       });
@@ -153,7 +152,7 @@ class DBHelper {
         // Store the restaurants list into IDB
         DBHelper.saveAllRestaurantsIfNewer(restaurants)
           .then(() => {
-            console.log(`Restaurants list saved to IDB!`);
+            console.log(`Restaurants list saved in IDB!`);
           });
         // return the requested array of restaurant objects
         return restaurants;
@@ -169,12 +168,20 @@ class DBHelper {
    * @returns {Promise} - Resolves with a `restaurant` object, or _null_ if not exists
    */
   static fetchRestaurantById(id) {
-    if (DBHelper.RESTAURANTS)
-      return Promise.resolve(DBHelper.RESTAURANTS.find(restaurant => restaurant.id === id));
+    if (DBHelper._RESTAURANTS) {
+      // Check if the requested restaurant is alredy stored in `_RESTAURANTS`
+      const restaurant = DBHelper._RESTAURANTS.find(restaurant => restaurant.id === id);
+      if (restaurant)
+        return Promise.resolve(restaurant);
+    }
 
     return fetch(`${DBHelper.API_ENDPOINT}/${id}`)
       .then(response => response.json())
       .then(restaurant => {
+        // Initialize `_RESTAURANTS` if needed
+        DBHelper._RESTAURANTS = DBHelper._RESTAURANTS || [];
+        DBHelper._RESTAURANTS.push(restaurant);
+        // Save also `restaurant` in IDB
         DBHelper.saveRestaurantIfNewer(restaurant);
         return restaurant;
       })
@@ -185,12 +192,13 @@ class DBHelper {
 
   /**
    * Fetch restaurants by a cuisine
+   * @param {string} cuisine - The requested cuisine type
    * @returns {Promise} - Resolves with an array of objects of type `restaurant`
    */
   static fetchRestaurantByCuisine(cuisine) {
     return DBHelper.fetchRestaurants()
       .then(restaurants => {
-        return restaurants.filter(r => r.cuisine_type == cuisine);
+        return restaurants.filter(r => r.cuisine_type === cuisine);
       })
       .catch(err => {
         console.log(`Error fetching the list of cuisine types: ${err}`);
@@ -199,12 +207,13 @@ class DBHelper {
 
   /**
    * Fetch restaurants by a neighborhood
+   * @param {string} neighborhood - The requested neighborhood
    * @returns {Promise} - Resolves with an array of objects of type `restaurant`
    */
   static fetchRestaurantByNeighborhood(neighborhood) {
     return DBHelper.fetchRestaurants()
       .then(restaurants => {
-        return restaurants.filter(r => r.neighborhood == neighborhood);
+        return restaurants.filter(r => r.neighborhood === neighborhood);
       })
       .catch(err => {
         console.log(`Error fetching the list of neighborhoods: ${err}`);
@@ -234,13 +243,12 @@ class DBHelper {
   static fetchNeighborhoods() {
     return DBHelper.fetchRestaurants()
       .then(restaurants => {
-        // Use `Set` to collect unique values
+        // Use of `Set` to collect unique values
         return Array.from(restaurants.reduce((set, restaurant) => set.add(restaurant.neighborhood), new Set()));
       })
       .catch(err => {
         console.log(`Error getting the list of neighborhoods: ${err}`);
       });
-    ;
   }
 
   /**
