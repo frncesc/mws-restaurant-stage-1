@@ -41,12 +41,13 @@ fetchNeighborhoods = () => {
  */
 fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
   const select = document.getElementById('neighborhoods-select');
-  neighborhoods.forEach(neighborhood => {
-    const option = document.createElement('option');
-    option.innerHTML = neighborhood;
-    option.value = neighborhood;
-    select.append(option);
-  });
+  if (neighborhoods)
+    neighborhoods.forEach(neighborhood => {
+      const option = document.createElement('option');
+      option.innerHTML = neighborhood;
+      option.value = neighborhood;
+      select.append(option);
+    });
 }
 
 /**
@@ -67,12 +68,13 @@ fetchCuisines = () => {
  */
 fillCuisinesHTML = (cuisines = self.cuisines) => {
   const select = document.getElementById('cuisines-select');
-  cuisines.forEach(cuisine => {
-    const option = document.createElement('option');
-    option.innerHTML = cuisine;
-    option.value = cuisine;
-    select.append(option);
-  });
+  if (cuisines)
+    cuisines.forEach(cuisine => {
+      const option = document.createElement('option');
+      option.innerHTML = cuisine;
+      option.value = cuisine;
+      select.append(option);
+    });
 }
 
 /**
@@ -117,10 +119,12 @@ resetRestaurants = (restaurants) => {
  */
 fillRestaurantsHTML = (restaurants = self.restaurants) => {
   const ul = document.getElementById('restaurants-list');
-  restaurants.forEach(restaurant => {
-    ul.append(createRestaurantHTML(restaurant));
-  });
-  addMarkersToMap();
+  if (restaurants) {
+    restaurants.forEach(restaurant => {
+      ul.append(createRestaurantHTML(restaurant));
+    });
+    addMarkersToMap();
+  }
 }
 
 /**

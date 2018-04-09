@@ -158,6 +158,7 @@ class DBHelper {
         return restaurants;
       })
       .catch(err => {
+        console.log(err);
         console.log(`Error requesting the restaurants list: ${err}`);
       });
   }
@@ -229,7 +230,10 @@ class DBHelper {
   static fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood) {
     return DBHelper.fetchRestaurants()
       .then(restaurants => {
-        return restaurants.filter(r => (cuisine === 'all' || r.cuisine_type === cuisine) && (neighborhood === 'all' || r.neighborhood === neighborhood));
+        return restaurants ? restaurants.filter(r => {
+          return (cuisine === 'all' || r.cuisine_type === cuisine)
+            && (neighborhood === 'all' || r.neighborhood === neighborhood);
+        }) : [];
       })
       .catch(err => {
         console.log(`Error fetching restaurant list by cuisine and neighborhood: ${err}`);
@@ -244,7 +248,7 @@ class DBHelper {
     return DBHelper.fetchRestaurants()
       .then(restaurants => {
         // Use of `Set` to collect unique values
-        return Array.from(restaurants.reduce((set, restaurant) => set.add(restaurant.neighborhood), new Set()));
+        return restaurants ? Array.from(restaurants.reduce((set, restaurant) => set.add(restaurant.neighborhood), new Set())) : [];
       })
       .catch(err => {
         console.log(`Error getting the list of neighborhoods: ${err}`);
@@ -259,7 +263,7 @@ class DBHelper {
     return DBHelper.fetchRestaurants()
       .then(restaurants => {
         // Use `Set` to collect unique values
-        return Array.from(restaurants.reduce((set, restaurant) => set.add(restaurant.cuisine_type), new Set()));
+        return restaurants ? Array.from(restaurants.reduce((set, restaurant) => set.add(restaurant.cuisine_type), new Set())) : [];
       })
       .catch(err => {
         console.log(`Error getting the list of cuisine types: ${err}`);
