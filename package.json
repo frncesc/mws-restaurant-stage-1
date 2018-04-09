@@ -20,9 +20,11 @@
   },
   "homepage": "https://github.com/frncesc/mws-restaurant-stage-1#readme",
   "devDependencies": {
-    "idb": "^2.1.1",
     "live-server": "^1.2.0",
     "sharp": "^0.20.1"
+  },
+  "dependencies": {
+    "idb": "^2.1.1"
   },
   "scripts": {
     "debug": "live-server --host=localhost --port=8000 --open=index.html -V --watch=.",

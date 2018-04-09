@@ -1,3 +1,13 @@
+### Miscellaneous improvements
+- Use of `fetch` calls instead of XHR requests. More flexible and Promise-based.
+- Use ES6 global objects of type [Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set) to obtain the lists of cuisines and neighborhoods without duplicates.
+- Store the full restaurants list into `DBHelper` to avoid unnecessary requests to the server.
+- Update and complete code comments
+
+### Use promises instead of callbacks
+- Refactor methods in `DBHelper` currently using callback functions in order to return objects of type `Promise`, more flexible and compatible with IDB.
+- Convert callback functions in `main.js` and `restaurant_info.js`, making them consumers and/or producers of `Promise` objects.
+
 ### Store restaurant data into IndexedDB
 - Add Jake Archibald's [IDB](https://github.com/jakearchibald/idb) package to `package.json`. Then, copy `/node_modules/idb/lib/idb.js` into `/js` (don't `require` modules by now) and import it in `index.html` and `restaurants.html`.
 - Create new methods in `DBHelper` to deal with IndexedDb:
@@ -7,6 +17,7 @@
   - `saveRestaurantIfNewer`: Checks if a restaurant with the given ID already exists and has updated data proor to add or update the restaurant record into the IDB.
   - `saveAllRestaurantsIfNewer`: Performs the previous operation with a collection of restaurants.
 - Update `DBHelper.fetchRestaurants` to save the obtained restaurant data into IDB.
+- Add `js/idb.js` to `PRECACHE_URLS` in `service-worker.js`
 
 ### Add generic photograph
 - Created a generic image for restaurants with the `photograph` field empty or undefined.
@@ -16,7 +27,7 @@
 - Adapt `DBHelper.fetchRestaurants` to read the array of records returned by the server.
 - Adapt `DBHelper.fetchRestaurantById` to retrieve data related to just one restaurant.
 - Remove `data/restaurants.json` from `PRECACHE_URLS` in service worker (we will not need it anymore)
-- Add the `.jpg` file extension to `DBHelper.imageFileForRestaurant` and `DBHelper.imageUrlForRestaurant` (the server returns just the base file name)
+- Add the `.jpg` file extension to `DBHelper.imageFileForRestaurant` (the server returns just the base file name)
 
 ### Accessibility improvements
 - Set `alt` attributes to all images

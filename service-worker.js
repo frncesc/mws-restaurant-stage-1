@@ -17,7 +17,7 @@
 // Names of the two caches used in this version of the service worker.
 // Change to v2, etc. when you update any of the local resources, which will
 // in turn trigger the install event again.
-const PRECACHE = 'restaurant-precache-v9';
+const PRECACHE = 'restaurant-precache-v10';
 const RUNTIME = 'restaurant-runtime';
 
 // A list of local resources we always want to be cached.
@@ -28,7 +28,8 @@ const PRECACHE_URLS = [
   'css/styles.css',
   'js/dbhelper.js',
   'js/main.js',
-  'js/restaurant_info.js'
+  'js/restaurant_info.js',
+  'js/idb.js'
 ];
 
 // The install handler takes care of precaching the resources we always need.

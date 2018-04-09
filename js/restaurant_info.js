@@ -15,10 +15,8 @@ var map;
  * Initialize Google map, called from HTML.
  */
 window.initMap = () => {
-  fetchRestaurantFromURL((error, restaurant) => {
-    if (error) { // Got an error!
-      console.error(error);
-    } else {
+  fetchRestaurantFromURL()
+    .then(restaurant => {
       self.map = new google.maps.Map(document.getElementById('map'), {
         zoom: 16,
         center: restaurant.latlng,
@@ -26,33 +24,31 @@ window.initMap = () => {
       });
       fillBreadcrumb();
       DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
-    }
-  });
+    });
 }
 
 /**
- * Get current restaurant from page URL.
+ * Get the current restaurant from page URL.
+ * @returns {Promise} - Resolves with an object of type `restaurant`
  */
-fetchRestaurantFromURL = (callback) => {
+fetchRestaurantFromURL = () => {
   if (self.restaurant) { // restaurant already fetched!
-    callback(null, self.restaurant)
-    return;
+    return Promise.resolve(self.restaurant);
   }
+
   const id = getParameterByName('id');
-  if (!id) { // no id found in URL
-    error = 'No restaurant id in URL'
-    callback(error, null);
-  } else {
-    DBHelper.fetchRestaurantById(id, (error, restaurant) => {
-      self.restaurant = restaurant;
-      if (!restaurant) {
-        console.error(error);
-        return;
-      }
-      fillRestaurantHTML();
-      callback(null, restaurant)
-    });
-  }
+  if (!id) // no id found in URL
+    return Promise.reject('No restaurant id in URL');
+  else
+    return DBHelper.fetchRestaurantById(id)
+      .then(restaurant => {
+        if (!restaurant)
+          return Promise.reject(`Unknown restaurant "${id}"`);
+
+        self.restaurant = restaurant;
+        fillRestaurantHTML();
+        return restaurant;
+      });
 }
 
 /**
@@ -71,9 +67,9 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   image.className = 'restaurant-img';
   image.alt = `${restaurant.name} restaurant photo`;
   image.sizes = 'calc(100vw - 2rem)';
-  image.srcset = DBHelper.imgSizes().map(size => `/img-${size}/${fileName} ${size}w`).join(', ') + `, /img/${fileName}`;
+  image.srcset = DBHelper.IMG_SIZES.map(size => `/img-${size}/${fileName} ${size}w`).join(', ') + `, /img/${fileName}`;
   image.src = `/img-800/${fileName}`;
-  
+
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = restaurant.cuisine_type;
 
@@ -110,6 +106,7 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
  */
 fillReviewsHTML = (reviews = self.restaurant.reviews) => {
   const container = document.getElementById('reviews-container');
+  
   const title = document.getElementById('reviews-title');
   title.innerHTML = 'Reviews';
 
@@ -130,9 +127,8 @@ fillReviewsHTML = (reviews = self.restaurant.reviews) => {
  */
 createReviewHTML = (review) => {
   const article = document.createElement('article');
-
   const header = document.createElement('header');
-
+  
   const name = document.createElement('div');
   name.className = 'review-author';
   name.setAttribute('aria-label', 'Review author');
@@ -164,6 +160,7 @@ createReviewHTML = (review) => {
  */
 fillBreadcrumb = (restaurant = self.restaurant) => {
   const breadcrumb = document.getElementById('breadcrumb');
+  
   const li = document.createElement('li');
   li.innerHTML = restaurant.name;
   breadcrumb.appendChild(li);

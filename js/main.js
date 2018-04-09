@@ -1,7 +1,6 @@
 /**
  * Register service worker
  */
-
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js');
 }
@@ -9,7 +8,6 @@ if ('serviceWorker' in navigator) {
 /**
  * Common variables
  */
-
 let restaurants,
   neighborhoods,
   cuisines
@@ -17,25 +15,25 @@ var map
 var markers = []
 
 /**
- * Fetch neighborhoods and cuisines as soon as the page is loaded.
+ * Fetch neighborhoods and cuisines as soon as the page is loaded, and update restaurants
  */
 document.addEventListener('DOMContentLoaded', (event) => {
-  fetchNeighborhoods();
-  fetchCuisines();
+  fetchNeighborhoods()
+    .then(fetchCuisines)
+    .then(updateRestaurants);
 });
 
 /**
  * Fetch all neighborhoods and set their HTML.
+ * @returns {Promise} - Resolves with an array of strings
  */
 fetchNeighborhoods = () => {
-  DBHelper.fetchNeighborhoods((error, neighborhoods) => {
-    if (error) { // Got an error
-      console.error(error);
-    } else {
+  return DBHelper.fetchNeighborhoods()
+    .then(neighborhoods => {
       self.neighborhoods = neighborhoods;
-      fillNeighborhoodsHTML();
-    }
-  });
+      fillNeighborhoodsHTML(neighborhoods);
+      return neighborhoods;
+    })
 }
 
 /**
@@ -53,16 +51,15 @@ fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
 
 /**
  * Fetch all cuisines and set their HTML.
+ * @returns {Promise} - Resolves with an array of strings
  */
 fetchCuisines = () => {
-  DBHelper.fetchCuisines((error, cuisines) => {
-    if (error) { // Got an error!
-      console.error(error);
-    } else {
+  return DBHelper.fetchCuisines()
+    .then(cuisines => {
       self.cuisines = cuisines;
-      fillCuisinesHTML();
-    }
-  });
+      fillCuisinesHTML(cuisines);
+      return cuisines;
+    })
 }
 
 /**
@@ -82,6 +79,7 @@ fillCuisinesHTML = (cuisines = self.cuisines) => {
 
 /**
  * Update page and map for current restaurants.
+ * @returns {Promise} - Resolves with an array of `restaurant` objects
  */
 updateRestaurants = () => {
   const cSelect = document.getElementById('cuisines-select');
@@ -93,13 +91,10 @@ updateRestaurants = () => {
   const cuisine = cSelect[cIndex].value;
   const neighborhood = nSelect[nIndex].value;
 
-  DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, (error, restaurants) => {
-    if (error) { // Got an error!
-      console.error(error);
-    } else {
-      resetRestaurants(restaurants);
-      fillRestaurantsHTML();
-    }
+  return DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood).then(restaurants => {
+    resetRestaurants(restaurants);
+    fillRestaurantsHTML();
+    return restaurants;
   })
 }
 
@@ -138,9 +133,9 @@ createRestaurantHTML = (restaurant) => {
   const image = document.createElement('img');
   image.alt = `${restaurant.name} restaurant photo`;
   image.sizes = 'calc(100vw - 2rem)';
-  image.srcset = DBHelper.imgSizes().map(size => `/img-${size}/${fileName} ${size}w`).join(', ') + `, /img/${fileName}`;
+  image.srcset = DBHelper.IMG_SIZES.map(size => `/img-${size}/${fileName} ${size}w`).join(', ') + `, /img/${fileName}`;
   image.className = 'restaurant-img';
-  image.src = `/img-400/${fileName}`;  
+  image.src = `/img-400/${fileName}`;
   li.append(image);
 
   const name = document.createElement('h3');
@@ -186,7 +181,7 @@ resetMarkers = () => {
   // Remove all map markers
   self.markers.forEach(m => m.setMap(null));
   self.markers = [];
-  addMarkersToMap();  
+  addMarkersToMap();
 }
 
 /**
@@ -202,12 +197,6 @@ window.initMap = () => {
     center: loc,
     scrollwheel: false
   });
-  // Moved to `DOMContentLoaded` event
-  // updateRestaurants();
-  // Just reset markers if `restaurants` has already been initialized
-  if(self.restaurants)
+  if (self.restaurants)
     resetMarkers();
 }
-
-// Call `updateRestaurants` when DOM is loaded
-window.addEventListener("DOMContentLoaded", updateRestaurants)
