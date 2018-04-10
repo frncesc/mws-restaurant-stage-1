@@ -24,6 +24,7 @@
     "gulp": "^3.9.1",
     "gulp-responsive": "^2.10.0",
     "live-server": "^1.2.0",
+    "merge-stream": "^1.0.1",
     "sharp": "^0.20.1"
   },
   "dependencies": {
