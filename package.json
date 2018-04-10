@@ -20,6 +20,9 @@
   },
   "homepage": "https://github.com/frncesc/mws-restaurant-stage-1#readme",
   "devDependencies": {
+    "del": "^3.0.0",
+    "gulp": "^3.9.1",
+    "gulp-responsive": "^2.10.0",
     "live-server": "^1.2.0",
     "sharp": "^0.20.1"
   },
@@ -29,6 +32,7 @@
   "scripts": {
     "debug": "live-server --host=localhost --port=8000 --open=index.html -V --watch=.",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "resize-images": "node resize-images.js"
+    "build-images": "gulp build-images",
+    "serve": "gulp serve"
   }
 }
