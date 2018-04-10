@@ -85,7 +85,7 @@ class DBHelper {
         .then(record => record ? record.data : null);
     });
   }
-  
+
   /**
    * Gets all restaurants from the IndexdedDB
    * @returns {Promise} - Resolves with an array of objects of type `restaurant`, or _null_ if none found.
@@ -177,6 +177,11 @@ class DBHelper {
       .catch(err => {
         // Maybe we are off-line? Try to get data from IDB
         return DBHelper.getAllRestaurantsPromiseFromIDB()
+          .then(restaurants => {
+            // Save `restaurants` for later use
+            DBHelper._RESTAURANTS = restaurants;
+            return restaurants;
+          })
           .catch(idbErr => {
             console.log(`Error requesting the restaurants list: ${err}`);
             throw new Error(idbErr);
