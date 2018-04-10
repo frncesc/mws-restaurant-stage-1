@@ -1,3 +1,8 @@
+### Miscellaneous improvements
+- Build a set of logo images in different sizes, stored in `/logo`.
+- Create a `manifest.json` file with basic information.
+- Add `meta` and `link rel` elements to `head` with information about the manifest, logo sizes and color theme.
+
 ### Use data stored in IndexedDB when off-line
 - Create the method `DBHelper.getAllRestaurantsPromiseFromIDB` to read all restaurant data from IDB.
 - Modify the `catch` methods of `fetchRestaurants` and `fetchRestaurantById` to read data from IDB when a network error occurs.
@@ -25,7 +30,7 @@
 - Update `DBHelper.fetchRestaurants` to save the obtained restaurant data into IDB.
 - Add `js/idb.js` to `PRECACHE_URLS` in `service-worker.js`
 
-### Add generic photograph
+### Add a generic restaurant image
 - Created a generic image for restaurants with the `photograph` field empty or undefined.
 
 ### Pull data from the development server

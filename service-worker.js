@@ -1,6 +1,5 @@
 
-// From https://github.com/GoogleChrome/samples/tree/gh-pages/service-worker
-
+// Adapted from: https://github.com/GoogleChrome/samples/tree/gh-pages/service-worker
 /*
  Copyright 2016 Google Inc. All Rights Reserved.
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +16,7 @@
 // Names of the two caches used in this version of the service worker.
 // Change to v2, etc. when you update any of the local resources, which will
 // in turn trigger the install event again.
-const PRECACHE = 'restaurant-precache-v10';
+const PRECACHE = 'restaurant-precache-v11';
 const RUNTIME = 'restaurant-runtime';
 
 // A list of local resources we always want to be cached.
@@ -29,7 +28,8 @@ const PRECACHE_URLS = [
   'js/dbhelper.js',
   'js/main.js',
   'js/restaurant_info.js',
-  'js/idb.js'
+  'js/idb.js',
+  'logo/icon-16x16.png' // Favicon
 ];
 
 // The install handler takes care of precaching the resources we always need.
