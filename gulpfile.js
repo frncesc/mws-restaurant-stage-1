@@ -3,12 +3,17 @@ const del = require('del');
 const newer = require('gulp-newer');
 const responsive = require('gulp-responsive');
 const liveServer = require('live-server');
+const runSequence = require('run-sequence');
 
 const LOGO_SIZES = [512, 192, 144, 96, 72, 64, 48, 16];
 const PICTURE_SIZES = [340, 400, 600, 800];
 
-gulp.task('build-pictures', () => {
+gulp.task('build:pictures', () => {
   return gulp.src('media/pictures/*.{jpg,png}')
+    .pipe(newer({
+      dest: 'src/pictures',
+      map: (fn) => fn.split('.')[0] + '-800px.' + fn.split('.')[1],
+    }))
     .pipe(responsive({
       '*': PICTURE_SIZES.map(s => { return { width: s, rename: { suffix: `-${s}px` } }; })
         .concat(PICTURE_SIZES.map(s => { return { width: s, rename: { suffix: `-${s}px`, extname: '.webp' } }; }))
@@ -20,7 +25,7 @@ gulp.task('build-pictures', () => {
     .pipe(gulp.dest('src/pictures'));
 });
 
-gulp.task('build-logo', () => {
+gulp.task('build:logo', () => {
   return gulp.src('media/logo/icon.png')
     .pipe(responsive(
       { '*': LOGO_SIZES.map(s => { return { width: s, rename: { suffix: `-${s}x${s}` } }; }) },
@@ -28,7 +33,7 @@ gulp.task('build-logo', () => {
     .pipe(gulp.dest('src/logo'));
 });
 
-gulp.task('serve-src', function () {
+gulp.task('serve:src', function () {
   liveServer.start({
     port: 8000,
     host: 'localhost',
@@ -37,22 +42,25 @@ gulp.task('serve-src', function () {
     file: 'index.html',
     wait: 1000,
   });
+})
+
+gulp.task('watch:src', function () {
   gulp.watch('media/pictures/*', ['build-pictures']);
   gulp.watch('media/logo/icon.png', ['build-logo']);
 })
 
-gulp.task('clean-dist', (done) => {
-  del(['dist'], done);
+gulp.task('clean:dist', (done) => {
+  return del(['dist'], done);
 });
 
-gulp.task('copy-to-dist', function () {
+gulp.task('copy:dist', function () {
   // Todo: minify js
   gulp.src('src/**/*.{html,js,css,json,jpg,png,webp}')
     .pipe(newer('dist'))
     .pipe(gulp.dest('dist'));
 });
 
-gulp.task('serve-dist', function () {
+gulp.task('serve:dist', function () {
   liveServer.start({
     port: 8010,
     host: 'localhost',
@@ -61,7 +69,18 @@ gulp.task('serve-dist', function () {
     file: 'index.html',
     wait: 1000,
   });
-  gulp.watch(['src/**/*.{html,js,css,json}'], ['copy-to-dist']);
-  gulp.watch('media/pictures/*', ['build-pictures', 'copy-to-dist']);
-  gulp.watch('media/logo/icon.png', ['build-logo', 'copy-to-dist']);
 })
+
+gulp.task('watch:dist', function () {
+  gulp.watch(['src/**/*.{html,js,css,json}'], ['copy:dist']);
+  gulp.watch('media/pictures/*', ['build:pictures', 'copy:dist']);
+  gulp.watch('media/logo/icon.png', ['build:logo', 'copy:dist']);
+})
+
+gulp.task('serve', function (callback) {
+  runSequence('clean:dist', ['build:pictures', 'build:logo'], 'copy:dist', ['serve:dist', 'watch:dist'], callback);
+});
+
+gulp.task('debug', function (callback) {
+  runSequence(['build:pictures', 'build:logo'], ['serve:src', 'watch:src'], callback);
+});
