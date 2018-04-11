@@ -14,22 +14,29 @@ gulp.task('build:pictures', () => {
       dest: 'src/pictures',
       map: (fn) => fn.split('.')[0] + '-800px.' + fn.split('.')[1],
     }))
-    .pipe(responsive({
-      '*': PICTURE_SIZES.map(s => { return { width: s, rename: { suffix: `-${s}px` } }; })
-        .concat(PICTURE_SIZES.map(s => { return { width: s, rename: { suffix: `-${s}px`, extname: '.webp' } }; }))
-    }, {
-        quality: 70,
-        progressive: true,
-        withMetadata: false,
-      }))
+    .pipe(responsive({'*': PICTURE_SIZES.map(s => { return { width: s, rename: { suffix: `-${s}px` } }; })
+    .concat(PICTURE_SIZES.map(s => { return { width: s, rename: { suffix: `-${s}px`, extname: '.webp' } }; }))},
+    { quality: 70,
+      progressive: true,
+      withMetadata: false,
+      errorOnUnusedConfig: false,
+      silent: true,
+    }))
     .pipe(gulp.dest('src/pictures'));
 });
 
 gulp.task('build:logo', () => {
   return gulp.src('media/logo/icon.png')
+    .pipe(newer({
+      dest: 'src/logo',
+      ext: '-512x512.png'
+    }))
     .pipe(responsive(
       { '*': LOGO_SIZES.map(s => { return { width: s, rename: { suffix: `-${s}x${s}` } }; }) },
-      { withMetadata: false }))
+      { withMetadata: false,
+        errorOnUnusedConfig: false,
+        silent: true,
+      }))
     .pipe(gulp.dest('src/logo'));
 });
 
