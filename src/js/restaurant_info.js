@@ -64,13 +64,15 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   address.innerHTML = restaurant.address;
 
   const image = document.getElementById('restaurant-img');
-  const fileName = DBHelper.imageFileForRestaurant(restaurant);
+  const fullFileNameParts = DBHelper.imageFileForRestaurant(restaurant).split('.');
+  const fileName = fullFileNameParts[0];
+  const extension = fullFileNameParts[1];
 
   image.className = 'restaurant-img';
   image.alt = `${restaurant.name} restaurant photo`;
   image.sizes = 'calc(100vw - 2rem)';
-  image.srcset = DBHelper.IMG_SIZES.map(size => `/img-${size}/${fileName} ${size}w`).join(', ') + `, /img/${fileName}`;
-  image.src = `/img-800/${fileName}`;
+  image.srcset = DBHelper.IMG_SIZES.map(size => `pictures/${fileName}-${size}px.${extension} ${size}w`).join(', ') + `, pictures/${fileName}-800px.${extension}`;
+  image.src = `pictures/${fileName}-800px.${extension}`;
 
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = restaurant.cuisine_type;

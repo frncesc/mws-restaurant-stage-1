@@ -22,18 +22,17 @@
   "devDependencies": {
     "del": "^3.0.0",
     "gulp": "^3.9.1",
+    "gulp-newer": "^1.4.0",
     "gulp-responsive": "^2.10.0",
     "live-server": "^1.2.0",
-    "merge-stream": "^1.0.1",
     "sharp": "^0.20.1"
   },
   "dependencies": {
     "idb": "^2.1.1"
   },
   "scripts": {
-    "debug": "live-server --host=localhost --port=8000 --open=index.html -V --watch=.",
+    "debug": "gulp serve-src",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build-images": "gulp build-images",
-    "serve": "gulp serve"
+    "serve": "gulp serve-dist"
   }
 }
