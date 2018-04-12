@@ -135,13 +135,35 @@ createRestaurantHTML = (restaurant) => {
   const fileName = fullFileNameParts[0];
   const extension = fullFileNameParts[1];
   const li = document.createElement('li');
-  const image = document.createElement('img');
-  image.alt = `${restaurant.name} restaurant photo`;
-  image.sizes = 'calc(100vw - 2rem)';
-  image.srcset = DBHelper.IMG_SIZES.map(size => `pictures/${fileName}-${size}px.${extension} ${size}w`).join(', ') + `, pictures/${fileName}-800px.${extension}`;
-  image.className = 'restaurant-img';
-  image.src = `pictures/${fileName}-400px.${extension}`;
-  li.append(image);
+  
+  // Use a `picture` element with both webp and jpeg sources instead of `img` with single srcset
+  const picture = document.createElement('picture');
+  picture.className = 'restaurant-img';
+
+  const sourceWebp = document.createElement('source');
+  sourceWebp.type = 'image/webp';
+  sourceWebp.srcset = DBHelper.IMG_SIZES.map(size => `pictures/${fileName}-${size}px.webp ${size}w`).join(', ') + `, pictures/${fileName}-800px.webp`;
+
+  const sourceJpeg = document.createElement('source');
+  sourceJpeg.type = 'image/jpeg';
+  sourceJpeg.srcset = DBHelper.IMG_SIZES.map(size => `pictures/${fileName}-${size}px.${extension} ${size}w`).join(', ') + `, pictures/${fileName}-800px.${extension}`;
+
+  const picImage = document.createElement('img');
+  picImage.alt = `${restaurant.name} restaurant photo`;
+  picImage.sizes = 'calc(100vw - 2rem)';
+  picImage.src = `pictures/${fileName}-400px.${extension}`;
+
+  picture.append(sourceWebp, sourceJpeg, picImage);
+  li.append(picture);
+    
+  // Old method:
+  //const image = document.createElement('img');
+  //image.alt = `${restaurant.name} restaurant photo`;
+  //image.sizes = 'calc(100vw - 2rem)';
+  //image.srcset = DBHelper.IMG_SIZES.map(size => `pictures/${fileName}-${size}px.${extension} ${size}w`).join(', ') + `, pictures/${fileName}-800px.${extension}`;
+  //image.className = 'restaurant-img';
+  //image.src = `pictures/${fileName}-400px.${extension}`;
+  //li.append(image);
 
   const name = document.createElement('h3');
   name.innerHTML = restaurant.name;

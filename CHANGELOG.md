@@ -1,3 +1,6 @@
+### Use of [WebP](https://developers.google.com/speed/webp/) image format when possible
+- Change `img` elements with `picture` elements with two `source` components: one with a `srcset` based on WebP, and a second one with JPEG (for browsers that can not yet use WebP)
+
 ### Re-organize directories and use [Gulp](https://gulpjs.com/) to automate workflow
 - Project files are now organized in five directories:
   - `media`: Contains the original pictures of the restaurants, and a big logo.

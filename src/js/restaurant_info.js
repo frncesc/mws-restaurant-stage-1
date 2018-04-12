@@ -63,16 +63,30 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   const address = document.getElementById('restaurant-address');
   address.innerHTML = restaurant.address;
 
-  const image = document.getElementById('restaurant-img');
   const fullFileNameParts = DBHelper.imageFileForRestaurant(restaurant).split('.');
   const fileName = fullFileNameParts[0];
   const extension = fullFileNameParts[1];
 
-  image.className = 'restaurant-img';
-  image.alt = `${restaurant.name} restaurant photo`;
-  image.sizes = 'calc(100vw - 2rem)';
-  image.srcset = DBHelper.IMG_SIZES.map(size => `pictures/${fileName}-${size}px.${extension} ${size}w`).join(', ') + `, pictures/${fileName}-800px.${extension}`;
-  image.src = `pictures/${fileName}-800px.${extension}`;
+
+  // Use a `picture` element with both webp and jpeg sources instead of `img` with single srcset
+  const sourceWebp = document.getElementById('source-webp');
+  sourceWebp.srcset = DBHelper.IMG_SIZES.map(size => `pictures/${fileName}-${size}px.webp ${size}w`).join(', ') + `, pictures/${fileName}-800px.webp`;
+
+  const sourceJpeg = document.getElementById('source-jpeg');
+  sourceJpeg.srcset = DBHelper.IMG_SIZES.map(size => `pictures/${fileName}-${size}px.${extension} ${size}w`).join(', ') + `, pictures/${fileName}-800px.${extension}`;
+
+  const picImage = document.getElementById('restaurant-img');
+  picImage.alt = `${restaurant.name} restaurant photo`;
+  picImage.sizes = 'calc(100vw - 2rem)';
+  picImage.src = `pictures/${fileName}-800px.${extension}`;
+
+  // Old method:
+  //const image = document.getElementById('restaurant-img');
+  //image.className = 'restaurant-img';
+  //image.alt = `${restaurant.name} restaurant photo`;
+  //image.sizes = 'calc(100vw - 2rem)';
+  //image.srcset = DBHelper.IMG_SIZES.map(size => `pictures/${fileName}-${size}px.${extension} ${size}w`).join(', ') + `, pictures/${fileName}-800px.${extension}`;
+  //image.src = `pictures/${fileName}-800px.${extension}`;
 
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = restaurant.cuisine_type;
