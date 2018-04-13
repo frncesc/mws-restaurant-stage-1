@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Register service worker
  */
@@ -15,23 +17,14 @@ self.map = null;
 self.markers = [];
 
 /**
- * Fetch neighborhoods and cuisines as soon as the page is loaded, and update restaurants
- */
-document.addEventListener('DOMContentLoaded', (event) => {
-  fetchNeighborhoods()
-    .then(fetchCuisines)
-    .then(updateRestaurants);
-});
-
-/**
  * Fetch all neighborhoods and set their HTML.
  * @returns {Promise} - Resolves with an array of strings
  */
-fetchNeighborhoods = () => {
+self.fetchNeighborhoods = () => {
   return DBHelper.fetchNeighborhoods()
     .then(neighborhoods => {
       self.neighborhoods = neighborhoods;
-      fillNeighborhoodsHTML(neighborhoods);
+      self.fillNeighborhoodsHTML(neighborhoods);
       return neighborhoods;
     })
 }
@@ -39,7 +32,7 @@ fetchNeighborhoods = () => {
 /**
  * Set neighborhoods HTML.
  */
-fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
+self.fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
   const select = document.getElementById('neighborhoods-select');
   if (neighborhoods)
     neighborhoods.forEach(neighborhood => {
@@ -54,11 +47,11 @@ fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
  * Fetch all cuisines and set their HTML.
  * @returns {Promise} - Resolves with an array of strings
  */
-fetchCuisines = () => {
+self.fetchCuisines = () => {
   return DBHelper.fetchCuisines()
     .then(cuisines => {
       self.cuisines = cuisines;
-      fillCuisinesHTML(cuisines);
+      self.fillCuisinesHTML(cuisines);
       return cuisines;
     })
 }
@@ -66,7 +59,7 @@ fetchCuisines = () => {
 /**
  * Set cuisines HTML.
  */
-fillCuisinesHTML = (cuisines = self.cuisines) => {
+self.fillCuisinesHTML = (cuisines = self.cuisines) => {
   const select = document.getElementById('cuisines-select');
   if (cuisines)
     cuisines.forEach(cuisine => {
@@ -81,7 +74,7 @@ fillCuisinesHTML = (cuisines = self.cuisines) => {
  * Update page and map for current restaurants.
  * @returns {Promise} - Resolves with an array of `restaurant` objects
  */
-updateRestaurants = () => {
+self.updateRestaurants = () => {
   const cSelect = document.getElementById('cuisines-select');
   const nSelect = document.getElementById('neighborhoods-select');
 
@@ -93,8 +86,8 @@ updateRestaurants = () => {
 
   return DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood)
     .then(restaurants => {
-      resetRestaurants(restaurants);
-      fillRestaurantsHTML();
+      self.resetRestaurants(restaurants);
+      self.fillRestaurantsHTML();
       return restaurants;
     });
 }
@@ -102,7 +95,7 @@ updateRestaurants = () => {
 /**
  * Clear current restaurants, their HTML and remove their map markers.
  */
-resetRestaurants = (restaurants) => {
+self.resetRestaurants = (restaurants) => {
   // Remove all restaurants
   self.restaurants = [];
   const ul = document.getElementById('restaurants-list');
@@ -117,20 +110,20 @@ resetRestaurants = (restaurants) => {
 /**
  * Create all restaurants HTML and add them to the webpage.
  */
-fillRestaurantsHTML = (restaurants = self.restaurants) => {
+self.fillRestaurantsHTML = (restaurants = self.restaurants) => {
   const ul = document.getElementById('restaurants-list');
   if (restaurants) {
     restaurants.forEach(restaurant => {
       ul.append(createRestaurantHTML(restaurant));
     });
-    addMarkersToMap();
+    self.addMarkersToMap();
   }
 }
 
 /**
  * Create restaurant HTML.
  */
-createRestaurantHTML = (restaurant) => {
+self.createRestaurantHTML = (restaurant) => {
   const fullFileNameParts = DBHelper.imageFileForRestaurant(restaurant).split('.');
   const fileName = fullFileNameParts[0];
   const extension = fullFileNameParts[1];
@@ -156,15 +149,6 @@ createRestaurantHTML = (restaurant) => {
   picture.append(sourceWebp, sourceJpeg, picImage);
   li.append(picture);
     
-  // Old method:
-  //const image = document.createElement('img');
-  //image.alt = `${restaurant.name} restaurant photo`;
-  //image.sizes = 'calc(100vw - 2rem)';
-  //image.srcset = DBHelper.IMG_SIZES.map(size => `pictures/${fileName}-${size}px.${extension} ${size}w`).join(', ') + `, pictures/${fileName}-800px.${extension}`;
-  //image.className = 'restaurant-img';
-  //image.src = `pictures/${fileName}-400px.${extension}`;
-  //li.append(image);
-
   const name = document.createElement('h3');
   name.innerHTML = restaurant.name;
   li.append(name);
@@ -188,7 +172,7 @@ createRestaurantHTML = (restaurant) => {
 /**
  * Add markers for current restaurants to the map.
  */
-addMarkersToMap = (restaurants = self.restaurants) => {
+self.addMarkersToMap = (restaurants = self.restaurants) => {
   if (restaurants && self.map) {
     restaurants.forEach(restaurant => {
       // Add marker to the map
@@ -204,11 +188,11 @@ addMarkersToMap = (restaurants = self.restaurants) => {
 /**
  * Resets the restaurant markers
  */
-resetMarkers = () => {
+self.resetMarkers = () => {
   // Remove all map markers
   self.markers.forEach(m => m.setMap(null));
   self.markers = [];
-  addMarkersToMap();
+  self.addMarkersToMap();
 }
 
 /**
@@ -225,5 +209,14 @@ window.initMap = () => {
     scrollwheel: false
   });
   if (self.restaurants)
-    resetMarkers();
+    self.resetMarkers();
 }
+
+/**
+ * Fetch neighborhoods and cuisines as soon as the page is loaded, and update restaurants
+ */
+document.addEventListener('DOMContentLoaded', (event) => {
+  self.fetchNeighborhoods()
+    .then(fetchCuisines)
+    .then(updateRestaurants);
+});
