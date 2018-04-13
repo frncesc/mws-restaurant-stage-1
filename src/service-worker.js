@@ -16,7 +16,7 @@
 // Names of the two caches used in this version of the service worker.
 // Change to v2, etc. when you update any of the local resources, which will
 // in turn trigger the install event again.
-const PRECACHE = 'restaurant-precache-v12';
+const PRECACHE = 'restaurant-precache-v13';
 const RUNTIME = 'restaurant-runtime';
 
 // A list of local resources we always want to be cached.
@@ -25,18 +25,27 @@ const PRECACHE_URLS = [
   './', // Alias for index.html
   'restaurant.html',
   'css/styles.css',
+  'logo/icon-16x16.png' // Favicon
+];
+
+const PRECACHE_SCRIPTS_SRC = [
   'js/dbhelper.js',
   'js/main.js',
   'js/restaurant_info.js',
-  'js/idb.js',
-  'logo/icon-16x16.png' // Favicon
+  'js/idb.js'
+];
+
+const PRECACHE_SCRIPTS_DIST = [
+  'js/bundle-main.js',
+  'js/bundle-restaurant.js'
 ];
 
 // The install handler takes care of precaching the resources we always need.
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(PRECACHE)
-      .then(cache => cache.addAll(PRECACHE_URLS))
+      // To be replaced by `PRECACHE_SCRIPTS_DIST` in Gulp:
+      .then(cache => cache.addAll(PRECACHE_URLS.concat(PRECACHE_SCRIPTS_SRC)))
       .then(self.skipWaiting())
   );
 });

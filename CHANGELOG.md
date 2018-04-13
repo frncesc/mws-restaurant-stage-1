@@ -1,3 +1,14 @@
+### Bundle and minimize scripts
+- Reduce the number and size of imported scripts, and make it also compatible with old browsers using [Babel](https://babeljs.io/) and [UglifyJS](https://github.com/mishoo/UglifyJS).
+- Automatize the minification process in Gulp.
+- Adapt `index.html` and `restaurant.html` in `dist`, in order to import the compressed scripts instead of the original javascript files.
+- Adapt `service-worker.js` in `dist`, to pre-cache the compressed scripts.
+
+### Optimize workflow
+- Gulp functions should always return or chain with a callback (with the exception of `gulp.watch`)
+- Use 'strict' mode in all .js files. This is necessary to concatenate scripts with [idb](https://www.npmjs.com/package/idb), which already uses 'strict' mode.
+- Declare all global variables and functions as members of `self`
+
 ### Use of [WebP](https://developers.google.com/speed/webp/) image format when possible
 - Change `img` elements with `picture` elements with two `source` components: one with a `srcset` based on WebP, and a second one with JPEG (for browsers that can not yet use WebP)
 

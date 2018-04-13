@@ -6,6 +6,12 @@ const newer = require('gulp-newer');
 const responsive = require('gulp-responsive');
 const liveServer = require('live-server');
 const runSequence = require('run-sequence');
+const mergeStream = require('merge-stream');
+const concat = require('gulp-concat');
+const uglify = require('gulp-uglify');
+const babel = require('gulp-babel');
+const replace = require('gulp-replace');
+const htmlreplace = require('gulp-html-replace');
 
 // Take the original files located in `media/pictures` and generate
 // optimized images in JPEG, PNG and WEBP formats, resized to the widths specified in PICTURE_SIZES
@@ -56,7 +62,7 @@ gulp.task('build:logo', () => {
 
 // Start a live server based on `src`
 gulp.task('serve:src', function () {
-  liveServer.start({
+  return liveServer.start({
     port: 8000,
     host: 'localhost',
     root: 'src',
@@ -77,17 +83,42 @@ gulp.task('clean:dist', (done) => {
   return del(['dist'], done);
 });
 
-// Fill `dist` with the needed components
+// Compact, babelize, minimize, optimize and copy components to `dist`
 gulp.task('copy:dist', function () {
-  // Todo: minify js
-  gulp.src('src/**/*.{html,js,css,json,jpg,png,webp}')
-    .pipe(newer('dist'))
-    .pipe(gulp.dest('dist'));
+  return mergeStream(
+    // Concat and minimize 'main.js':    
+    gulp.src(['src/js/idb.js', 'src/js/dbhelper.js', 'src/js/main.js'])
+      .pipe(babel({ presets: ['es2015'] }))
+      .pipe(concat('bundle-main.js'))
+      .pipe(uglify())
+      .pipe(gulp.dest('dist/js')),
+    // Concat and minimize 'restaurant_info.js':
+    gulp.src(['src/js/idb.js', 'src/js/dbhelper.js', 'src/js/restaurant_info.js'])
+      .pipe(babel({ presets: ['es2015'] }))
+      .pipe(concat('bundle-restaurant.js'))
+      .pipe(uglify())
+      .pipe(gulp.dest('dist/js')),
+    // Update the list of pre-cache scripts in service worker (see `src/service-worker.js`):
+    gulp.src(['src/service-worker.js'])
+      .pipe(replace('.concat(PRECACHE_SCRIPTS_SRC)', '.concat(PRECACHE_SCRIPTS_DIST)'))
+      .pipe(gulp.dest('dist')),
+    // Update HTML files to use the minimized scripts:
+    gulp.src('src/*.html')
+      .pipe(htmlreplace({
+        'dist-main': 'js/bundle-main.js',
+        'dist-restaurant': 'js/bundle-restaurant.js'
+      }))
+      .pipe(gulp.dest('dist')),
+    // Copy the remaining assets:
+    gulp.src('src/**/*.{css,json,jpg,png,webp}')
+      .pipe(newer('dist'))
+      .pipe(gulp.dest('dist'))
+  );
 });
 
 // Start a live server based on `dist`
 gulp.task('serve:dist', function () {
-  liveServer.start({
+  return liveServer.start({
     port: 8010,
     host: 'localhost',
     root: 'dist',
