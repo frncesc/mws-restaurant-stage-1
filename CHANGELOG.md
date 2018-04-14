@@ -1,3 +1,6 @@
+### Miscellaneous optimizations
+- Replace the incorrect reference to _normalize-css.googlecode.com_ with a local copy of [normalize.css](https://necolas.github.io/normalize.css/)
+
 ### Bundle and minimize scripts
 - Reduce the number and size of imported scripts, and make it also compatible with old browsers using [Babel](https://babeljs.io/) and [UglifyJS](https://github.com/mishoo/UglifyJS).
 - Automatize the minification process in Gulp.

@@ -37,7 +37,8 @@
     "sharp": "^0.20.1"
   },
   "dependencies": {
-    "idb": "^2.1.1"
+    "idb": "^2.1.1",
+    "normalize.css": "^8.0.0"
   },
   "scripts": {
     "debug": "gulp debug",
