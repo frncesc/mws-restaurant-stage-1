@@ -12,6 +12,8 @@ const uglify = require('gulp-uglify');
 const babel = require('gulp-babel');
 const replace = require('gulp-replace');
 const htmlreplace = require('gulp-html-replace');
+const inline = require('gulp-inline');
+const cleanCSS = require('gulp-clean-css');
 
 // Take the original files located in `media/pictures` and generate
 // optimized images in JPEG, PNG and WEBP formats, resized to the widths specified in PICTURE_SIZES
@@ -87,30 +89,35 @@ gulp.task('clean:dist', (done) => {
 gulp.task('copy:dist', function () {
   return mergeStream(
     // Concat and minimize 'main.js':    
-    gulp.src(['src/js/idb.js', 'src/js/dbhelper.js', 'src/js/main.js'])
-      //.pipe(babel({ presets: ['es2015'] }))
+    gulp.src(['src/js/idb.js', 'src/js/intersection-observer.js', 'src/js/dbhelper.js', 'src/js/main.js'])
+      .pipe(babel({ presets: ['es2015'] }))
       .pipe(concat('bundle-main.js'))
-      //.pipe(uglify())
+      .pipe(uglify())
       .pipe(gulp.dest('dist/js')),
     // Concat and minimize 'restaurant_info.js':
     gulp.src(['src/js/idb.js', 'src/js/dbhelper.js', 'src/js/restaurant_info.js'])
-      //.pipe(babel({ presets: ['es2015'] }))
+      .pipe(babel({ presets: ['es2015'] }))
       .pipe(concat('bundle-restaurant.js'))
-      //.pipe(uglify())
+      .pipe(uglify())
       .pipe(gulp.dest('dist/js')),
     // Update the list of pre-cache scripts in service worker (see `src/service-worker.js`):
     gulp.src(['src/service-worker.js'])
-      .pipe(replace('.concat(PRECACHE_SCRIPTS_SRC)', '.concat(PRECACHE_SCRIPTS_DIST)'))
+      .pipe(replace('.concat(PRECACHE_ASSETS_SRC)', '.concat(PRECACHE_ASSETS_DIST)'))
       .pipe(gulp.dest('dist')),
-    // Update HTML files to use the minimized scripts:
+    // Update HTML files to use the minimized scripts and inline css:
     gulp.src('src/*.html')
       .pipe(htmlreplace({
         'dist-main': 'js/bundle-main.js',
         'dist-restaurant': 'js/bundle-restaurant.js'
       }))
+      .pipe(inline({        
+        base: 'src/',
+        css: cleanCSS,
+        disabledTypes: ['svg', 'img', 'js'], // Only inline css files
+      }))
       .pipe(gulp.dest('dist')),
     // Copy the remaining assets:
-    gulp.src('src/**/*.{css,json,jpg,png,webp}')
+    gulp.src('src/**/*.{json,jpg,png,webp}')
       .pipe(newer('dist'))
       .pipe(gulp.dest('dist'))
   );

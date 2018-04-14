@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-  <title>Restaurant Reviews</title>  
+  <title>Restaurant Reviews</title>
 
   <link rel="icon" href="logo/icon-16x16.png">
   <!-- See https://goo.gl/OOhYW5 -->
@@ -30,10 +30,13 @@
   <!-- Tile icon for Windows 8 (144x144 + tile color) -->
   <meta name="msapplication-TileImage" content="logo/icon-144x144.png">
   <meta name="msapplication-TileColor" content="#2196F3">
-  <meta name="msapplication-tap-highlight" content="no">  
+  <meta name="msapplication-tap-highlight" content="no">
 
-  <link rel="stylesheet" href="css/normalize.css" type="text/css">
-  <link rel="stylesheet" href="css/styles.css" type="text/css">
+  <!-- Common styles -->
+  <link rel="stylesheet" href="css/common-styles.css" type="text/css">
+  <!-- Styles specific to this page -->
+  <link rel="stylesheet" href="css/main.css" type="text/css">
+
   <meta name="viewport" content="width=device-width,initial-scale=1">
 </head>
 
@@ -65,6 +68,8 @@
   </main>
 
   <!-- build:dist-main -->
+  <!-- IntersectionObserver polyfill -->
+  <script type="application/javascript" charset="utf-8" src="js/intersection-observer.js"></script>
   <!-- Database helpers -->
   <script type="application/javascript" charset="utf-8" src="js/idb.js"></script>
   <script type="application/javascript" charset="utf-8" src="js/dbhelper.js"></script>

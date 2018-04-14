@@ -1,3 +1,15 @@
+### Perform miscellaneous optimizations on CSS
+- Split the main `styles.css` into three files:
+  - `common-styles.css` (including the main statements of [normalize.css](https://necolas.github.io/normalize.css/))
+  - `main.css`
+  - `restaurant-info.css`
+- Use of [gulp-clean-css](https://github.com/scniro/gulp-clean-css) and [gulp-inline](https://www.npmjs.com/package/gulp-inline) to minimize the CSS files and put its content directly inside the HTML files for the production environment (`dist`).
+
+### Use of [IntersectionObserver](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API) to avoid off-screen pictures
+- Create the `li` elements of the restaurant list without images.
+- Use an `IntersectionObserver` to detect when a restaurant `li` element is approaching or intersects the viewport, and then assign its sources (in WEBP and JPEG) and create the `img` element.
+- Import the [IntersectionObserver polyfill](https://www.npmjs.com/package/intersection-observer) for browsers that don't fully support the specification.
+
 ### Miscellaneous optimizations
 - Replace the incorrect reference to _normalize-css.googlecode.com_ with a local copy of [normalize.css](https://necolas.github.io/normalize.css/)
 
