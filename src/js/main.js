@@ -25,7 +25,7 @@ self.io = new IntersectionObserver(
     toBeRemoved.forEach(entry => self.io.unobserve(entry.target));
   },
   {
-    rootMargin: '100px'
+    rootMargin: '50px'
   }
 );
 
@@ -148,35 +148,15 @@ self.fillRestaurantsHTML = (restaurants = self.restaurants) => {
 self.createRestaurantHTML = (restaurant) => {
 
   const li = document.createElement('li');
-  //const fullFileNameParts = DBHelper.imageFileForRestaurant(restaurant).split('.');
   const imgFile = DBHelper.imageFileForRestaurant(restaurant);
   if (imgFile)
+    // The real picture will be set later in `setPictureForRestaurant`
     li.setAttribute('data-imgfile', imgFile);
-  //const fileName = fullFileNameParts[0];
-  //const extension = fullFileNameParts[1];
 
   // Use a `picture` element with both webp and jpeg sources instead of `img` with single srcset
   const picture = document.createElement('picture');
   picture.className = 'restaurant-img';
   picture.classList.add('empty-picture');
-
-  /*
-  const sourceWebp = document.createElement('source');
-  sourceWebp.type = 'image/webp';
-  sourceWebp.srcset = DBHelper.IMG_SIZES.map(size => `pictures/${fileName}-${size}px.webp ${size}w`).join(', ') + `, pictures/${fileName}-800px.webp`;
-
-  const sourceJpeg = document.createElement('source');
-  sourceJpeg.type = 'image/jpeg';
-  sourceJpeg.srcset = DBHelper.IMG_SIZES.map(size => `pictures/${fileName}-${size}px.${extension} ${size}w`).join(', ') + `, pictures/${fileName}-800px.${extension}`;
-
-  const picImage = document.createElement('img');
-  picImage.alt = `${restaurant.name} restaurant photo`;
-  picImage.sizes = 'calc(100vw - 2rem)';
-  picImage.src = `pictures/${fileName}-400px.${extension}`;
-
-  picture.append(sourceWebp, sourceJpeg, picImage);
-  */
-
   li.append(picture);
 
   const name = document.createElement('h3');
@@ -196,13 +176,19 @@ self.createRestaurantHTML = (restaurant) => {
   more.href = DBHelper.urlForRestaurant(restaurant);
   li.append(more);
 
+  // Register the element on the IntersectionObserver
   self.io.observe(li);
-  //self.setPictureForRestaurant(li);
 
   return li;
 }
 
+/**
+ * Set the real sources and image of a restaurant `picture` element
+ * Should be called by IntersectionObserver when the element approaches or intersects the viewport
+ */
 self.setPictureForRestaurant = (li) => {
+
+  // Get the ile name set by `createRestaurantHTML`
   const imgFile = li.getAttribute('data-imgfile');
   if (!imgFile)
     return;
@@ -213,19 +199,23 @@ self.setPictureForRestaurant = (li) => {
   const picture = li.querySelector('picture');
   const restaurantName = li.querySelector('h3').innerHTML;
 
+  // Define a set of sources in WEBP format
   const sourceWebp = document.createElement('source');
   sourceWebp.type = 'image/webp';
   sourceWebp.srcset = DBHelper.IMG_SIZES.map(size => `pictures/${fileName}-${size}px.webp ${size}w`).join(', ') + `, pictures/${fileName}-800px.webp`;
 
+  // Define a second set of sources in JPEG or PNG
   const sourceJpeg = document.createElement('source');
   sourceJpeg.type = 'image/jpeg';
   sourceJpeg.srcset = DBHelper.IMG_SIZES.map(size => `pictures/${fileName}-${size}px.${extension} ${size}w`).join(', ') + `, pictures/${fileName}-800px.${extension}`;
 
+  // Create the main `img` element of this `picture`
   const picImage = document.createElement('img');
   picImage.alt = `${restaurantName} restaurant photo`;
   picImage.sizes = 'calc(100vw - 2rem)';
   picImage.src = `pictures/${fileName}-400px.${extension}`;
 
+  // De-register this restaurant element from `IntersectionObserver`
   picture.classList.remove('empty-picture');
   picture.append(sourceWebp, sourceJpeg, picImage);
 
