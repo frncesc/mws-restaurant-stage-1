@@ -8,6 +8,28 @@ if ('serviceWorker' in navigator) {
 }
 
 /**
+ * Create an intersection observer to set the restaurant images on `li`
+ * elements only when they are close to the viewport boundaries.
+ * See: https://developers.google.com/web/updates/2016/04/intersectionobserver
+ */
+self.io = new IntersectionObserver(
+  entries => {
+    const toBeRemoved = entries.filter(entry => {
+      if (entry.isIntersecting && !entry.target.querySelector('img')) {
+        self.setPictureForRestaurant(entry.target);
+        return true;
+      }
+      return false;
+    });
+    // Remove already realized entries from the observer
+    toBeRemoved.forEach(entry => self.io.unobserve(entry.target));
+  },
+  {
+    rootMargin: '100px'
+  }
+);
+
+/**
  * Common variables
  */
 self.restaurants = [];
@@ -124,15 +146,21 @@ self.fillRestaurantsHTML = (restaurants = self.restaurants) => {
  * Create restaurant HTML.
  */
 self.createRestaurantHTML = (restaurant) => {
-  const fullFileNameParts = DBHelper.imageFileForRestaurant(restaurant).split('.');
-  const fileName = fullFileNameParts[0];
-  const extension = fullFileNameParts[1];
+
   const li = document.createElement('li');
-  
+  //const fullFileNameParts = DBHelper.imageFileForRestaurant(restaurant).split('.');
+  const imgFile = DBHelper.imageFileForRestaurant(restaurant);
+  if (imgFile)
+    li.setAttribute('data-imgfile', imgFile);
+  //const fileName = fullFileNameParts[0];
+  //const extension = fullFileNameParts[1];
+
   // Use a `picture` element with both webp and jpeg sources instead of `img` with single srcset
   const picture = document.createElement('picture');
   picture.className = 'restaurant-img';
+  picture.classList.add('empty-picture');
 
+  /*
   const sourceWebp = document.createElement('source');
   sourceWebp.type = 'image/webp';
   sourceWebp.srcset = DBHelper.IMG_SIZES.map(size => `pictures/${fileName}-${size}px.webp ${size}w`).join(', ') + `, pictures/${fileName}-800px.webp`;
@@ -147,8 +175,10 @@ self.createRestaurantHTML = (restaurant) => {
   picImage.src = `pictures/${fileName}-400px.${extension}`;
 
   picture.append(sourceWebp, sourceJpeg, picImage);
+  */
+
   li.append(picture);
-    
+
   const name = document.createElement('h3');
   name.innerHTML = restaurant.name;
   li.append(name);
@@ -166,7 +196,40 @@ self.createRestaurantHTML = (restaurant) => {
   more.href = DBHelper.urlForRestaurant(restaurant);
   li.append(more);
 
+  self.io.observe(li);
+  //self.setPictureForRestaurant(li);
+
   return li;
+}
+
+self.setPictureForRestaurant = (li) => {
+  const imgFile = li.getAttribute('data-imgfile');
+  if (!imgFile)
+    return;
+
+  const fullFileNameParts = imgFile.split('.');
+  const fileName = fullFileNameParts[0];
+  const extension = fullFileNameParts[1];
+  const picture = li.querySelector('picture');
+  const restaurantName = li.querySelector('h3').innerHTML;
+
+  const sourceWebp = document.createElement('source');
+  sourceWebp.type = 'image/webp';
+  sourceWebp.srcset = DBHelper.IMG_SIZES.map(size => `pictures/${fileName}-${size}px.webp ${size}w`).join(', ') + `, pictures/${fileName}-800px.webp`;
+
+  const sourceJpeg = document.createElement('source');
+  sourceJpeg.type = 'image/jpeg';
+  sourceJpeg.srcset = DBHelper.IMG_SIZES.map(size => `pictures/${fileName}-${size}px.${extension} ${size}w`).join(', ') + `, pictures/${fileName}-800px.${extension}`;
+
+  const picImage = document.createElement('img');
+  picImage.alt = `${restaurantName} restaurant photo`;
+  picImage.sizes = 'calc(100vw - 2rem)';
+  picImage.src = `pictures/${fileName}-400px.${extension}`;
+
+  picture.classList.remove('empty-picture');
+  picture.append(sourceWebp, sourceJpeg, picImage);
+
+  console.log(`Picture set for "${restaurantName}"`);
 }
 
 /**

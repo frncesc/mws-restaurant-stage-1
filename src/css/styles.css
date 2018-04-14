@@ -184,6 +184,11 @@ body > header h1 a:focus,a:hover {
   margin: 0;
   width: 100%;
 }
+#restaurants-list .empty-picture {
+  background-color: var(--inverse-ink);
+  padding-top: 75%;
+  position: relative;
+}
 #restaurants-list li h3 {
   color: var(--accent);
   font-family: Arial,sans-serif;

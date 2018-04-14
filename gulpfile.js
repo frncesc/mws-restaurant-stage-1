@@ -88,15 +88,15 @@ gulp.task('copy:dist', function () {
   return mergeStream(
     // Concat and minimize 'main.js':    
     gulp.src(['src/js/idb.js', 'src/js/dbhelper.js', 'src/js/main.js'])
-      .pipe(babel({ presets: ['es2015'] }))
+      //.pipe(babel({ presets: ['es2015'] }))
       .pipe(concat('bundle-main.js'))
-      .pipe(uglify())
+      //.pipe(uglify())
       .pipe(gulp.dest('dist/js')),
     // Concat and minimize 'restaurant_info.js':
     gulp.src(['src/js/idb.js', 'src/js/dbhelper.js', 'src/js/restaurant_info.js'])
-      .pipe(babel({ presets: ['es2015'] }))
+      //.pipe(babel({ presets: ['es2015'] }))
       .pipe(concat('bundle-restaurant.js'))
-      .pipe(uglify())
+      //.pipe(uglify())
       .pipe(gulp.dest('dist/js')),
     // Update the list of pre-cache scripts in service worker (see `src/service-worker.js`):
     gulp.src(['src/service-worker.js'])
