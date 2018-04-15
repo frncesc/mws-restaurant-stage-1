@@ -142,12 +142,23 @@ gulp.task('watch:dist', function () {
   gulp.watch('media/logo/icon.png', ['build:logo', 'copy:dist']);
 })
 
-// Prepare `dist`, launch the HTTP server, launch the main page in a browser and reload it when changes are detected
-gulp.task('serve', function (callback) {
-  runSequence('clean:dist', ['build:pictures', 'build:logo'], 'copy:dist', ['serve:dist', 'watch:dist'], callback);
+// Build the `dist` release
+gulp.task('build:dist', function (callback) {
+  runSequence('clean:dist', ['build:pictures', 'build:logo'], 'copy:dist', callback);
 });
 
-// Prepare `src` (unoptimized sources), launch the HTTP server, launch the main page in a browser and reload it when changes are detected
+// Build `dist`, launch the HTTP server, launch the main page in a browser and reload it when changes are detected
+gulp.task('serve', ['build:dist'], function (callback) {
+  runSequence(['serve:dist', 'watch:dist'], callback);
+});
+
+// Prepare the `src` directory for a debug session
+gulp.task('build:debug', function (callback) {
+  runSequence(['build:pictures', 'build:logo'], callback);
+});
+
+
+// Prepare the `src` directory, launch the HTTP server, launch the main page in a browser and reload it when changes are detected
 gulp.task('debug', function (callback) {
-  runSequence(['build:pictures', 'build:logo'], ['serve:src', 'watch:src'], callback);
+  runSequence('build:debug', ['serve:src', 'watch:src'], callback);
 });

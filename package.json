@@ -44,6 +44,7 @@
     "normalize.css": "^8.0.0"
   },
   "scripts": {
+    "build": "gulp build:dist",
     "debug": "gulp debug",
     "test": "echo \"Error: no test specified\" && exit 1",
     "serve": "gulp serve"

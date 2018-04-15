@@ -1,3 +1,5 @@
+## STAGE 2
+
 ### Perform miscellaneous optimizations on CSS
 - Split the main `styles.css` into three files:
   - `common-styles.css` (including the main statements of [normalize.css](https://necolas.github.io/normalize.css/))
@@ -86,6 +88,9 @@
 - Adapt `DBHelper.fetchRestaurantById` to retrieve data related to just one restaurant.
 - Remove `data/restaurants.json` from `PRECACHE_URLS` in service worker (we will not need it anymore)
 - Add the `.jpg` file extension to `DBHelper.imageFileForRestaurant` (the server returns just the base file name)
+
+
+## STAGE 1
 
 ### Accessibility improvements
 - Set `alt` attributes to all images
