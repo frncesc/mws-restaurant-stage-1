@@ -17,14 +17,25 @@ var map;
  * Initialize Google map, called from HTML.
  */
 window.initMap = () => {
+  const mapContainer = document.getElementById('map');
   fetchRestaurantFromURL()
     .then(restaurant => {
-      self.map = new google.maps.Map(document.getElementById('map'), {
+      self.map = new google.maps.Map(mapContainer, {
         zoom: 16,
         center: restaurant.latlng,
-        scrollwheel: false
+        //scrollwheel: false,
+        gestureHandling: 'cooperative',
       });
       self.fillBreadcrumb();
+
+      // Add 'title' attribute to the iframe map container
+      const titleListener = self.map.addListener('tilesloaded', ev => {
+        const mapFrame = mapContainer.querySelector('iframe');
+        if (mapFrame)
+          mapFrame.setAttribute('title', 'Map');
+        titleListener.remove();
+      });
+      
       DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
     });
 }

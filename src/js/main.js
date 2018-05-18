@@ -256,11 +256,22 @@ window.initMap = () => {
     lat: 40.722216,
     lng: -73.987501
   };
-  self.map = new google.maps.Map(document.getElementById('map'), {
+  const mapContainer = document.getElementById('map');
+  self.map = new google.maps.Map(mapContainer, {
     zoom: 12,
     center: loc,
-    scrollwheel: false
+    //scrollwheel: false,
+    gestureHandling: 'cooperative',
   });
+
+  // Add 'title' attribute to the iframe map container
+  const titleListener = self.map.addListener('tilesloaded', ev => {
+    const mapFrame = mapContainer.querySelector('iframe');
+    if (mapFrame)
+      mapFrame.setAttribute('title', 'Map');
+    titleListener.remove();
+  });
+
   if (self.restaurants)
     self.resetMarkers();
 }
