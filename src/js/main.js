@@ -249,6 +249,17 @@ self.resetMarkers = () => {
 }
 
 /**
+ * Load GoogleMaps script
+ */
+self.loadMap = () => {
+  const script = document.createElement('script');
+  script.setAttribute('async', '');
+  script.setAttribute('defer', '');  
+  script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyD9RCuWU0sT08E4iXZeMNHdMrr1fXX0KiY&libraries=places&callback=initMap';
+  document.querySelector('head').appendChild(script);
+}
+
+/**
  * Initialize Google map, called from HTML.
  */
 window.initMap = () => {
@@ -280,7 +291,11 @@ window.initMap = () => {
  * Fetch neighborhoods and cuisines as soon as the page is loaded, and update restaurants
  */
 document.addEventListener('DOMContentLoaded', (event) => {
+
+  //self.loadMap();
+  
   self.fetchNeighborhoods()
     .then(fetchCuisines)
     .then(updateRestaurants);
+  
 });

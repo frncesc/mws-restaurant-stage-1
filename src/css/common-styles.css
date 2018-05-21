@@ -111,6 +111,11 @@ a:hover {
   background-color: var(--gray-paper);
 }
 
+.mainMap {
+  background-image: url(map/map640.png);
+  background-repeat: no-repeat;
+}
+
 /* Small mobile devices*/
 
 @media screen and (max-width: 374px) {

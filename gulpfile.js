@@ -62,6 +62,30 @@ gulp.task('build:logo', () => {
     .pipe(gulp.dest('src/logo'));
 });
 
+// Take the original files located in `media/map` and generate
+// optimized images in JPEG, PNG and WEBP formats
+const MAP_FORMATS = ['png', 'webp', 'jpg'];
+gulp.task('build:map', () => {
+  return gulp.src('media/map/*.png')
+    // Act only when the original media is newer than the auto-generated one
+    .pipe(newer({
+      dest: 'src/map',
+      map: (fn) => fn.split('.')[0] + '.jpg',
+    }))
+    .pipe(responsive(
+      {
+        '*': MAP_FORMATS.map(s => { return { rename: { extname: `.${s}` } }; })
+      },
+      {
+        quality: 70,
+        progressive: true,
+        withMetadata: false,
+        errorOnUnusedConfig: false,
+        silent: true,
+      }))
+    .pipe(gulp.dest('src/map'));
+});
+
 // Start a live server based on `src`
 gulp.task('serve:src', function () {
   return liveServer.start({
@@ -78,6 +102,7 @@ gulp.task('serve:src', function () {
 gulp.task('watch:src', function () {
   gulp.watch('media/pictures/*', ['build-pictures']);
   gulp.watch('media/logo/icon.png', ['build-logo']);
+  gulp.watch('media/map/*.png', ['build-map']);
 })
 
 // Remove `dist`
@@ -110,7 +135,7 @@ gulp.task('copy:dist', function () {
         'dist-main': 'js/bundle-main.js',
         'dist-restaurant': 'js/bundle-restaurant.js'
       }))
-      .pipe(inline({        
+      .pipe(inline({
         base: 'src/',
         css: cleanCSS,
         disabledTypes: ['svg', 'img', 'js'], // Only inline css files
@@ -140,11 +165,12 @@ gulp.task('watch:dist', function () {
   gulp.watch(['src/**/*.{html,js,css,json}'], ['copy:dist']);
   gulp.watch('media/pictures/*', ['build:pictures', 'copy:dist']);
   gulp.watch('media/logo/icon.png', ['build:logo', 'copy:dist']);
+  gulp.watch('media/map/*', ['build:map', 'copy:dist']);
 })
 
 // Build the `dist` release
 gulp.task('build:dist', function (callback) {
-  runSequence('clean:dist', ['build:pictures', 'build:logo'], 'copy:dist', callback);
+  runSequence('clean:dist', ['build:pictures', 'build:logo', 'build:map'], 'copy:dist', callback);
 });
 
 // Build `dist`, launch the HTTP server, launch the main page in a browser and reload it when changes are detected
@@ -154,7 +180,7 @@ gulp.task('serve', ['build:dist'], function (callback) {
 
 // Prepare the `src` directory for a debug session
 gulp.task('build:debug', function (callback) {
-  runSequence(['build:pictures', 'build:logo'], callback);
+  runSequence(['build:pictures', 'build:logo', 'build:map'], callback);
 });
 
 
