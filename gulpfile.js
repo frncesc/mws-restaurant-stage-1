@@ -64,7 +64,7 @@ gulp.task('build:logo', () => {
 
 // Take the original files located in `media/map` and generate
 // optimized images in JPEG, PNG and WEBP formats
-const MAP_FORMATS = ['png', 'webp', 'jpg'];
+const MAP_FORMATS = ['jpg'];
 gulp.task('build:map', () => {
   return gulp.src('media/map/*.png')
     // Act only when the original media is newer than the auto-generated one

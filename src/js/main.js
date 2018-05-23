@@ -35,6 +35,7 @@ self.io = new IntersectionObserver(
 self.restaurants = [];
 self.neighborhoods = [];
 self.cuisines = [];
+self.mapScript = null;
 self.map = null;
 self.markers = [];
 
@@ -218,8 +219,6 @@ self.setPictureForRestaurant = (li) => {
   // De-register this restaurant element from `IntersectionObserver`
   picture.classList.remove('empty-picture');
   picture.append(sourceWebp, sourceJpeg, picImage);
-
-  console.log(`Picture set for "${restaurantName}"`);
 }
 
 /**
@@ -251,16 +250,74 @@ self.resetMarkers = () => {
 /**
  * Load GoogleMaps script
  */
-self.loadMap = () => {
-  const script = document.createElement('script');
-  script.setAttribute('async', '');
-  script.setAttribute('defer', '');  
-  script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyD9RCuWU0sT08E4iXZeMNHdMrr1fXX0KiY&libraries=places&callback=initMap';
-  document.querySelector('head').appendChild(script);
+self.loadGoogleMaps = () => {
+  if (!self.mapScript) {
+    self.mapScript = document.createElement('script');
+    self.mapScript.setAttribute('async', '');
+    self.mapScript.setAttribute('defer', '');
+    self.mapScript.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyD9RCuWU0sT08E4iXZeMNHdMrr1fXX0KiY&libraries=places&callback=initMap';
+    document.querySelector('head').appendChild(self.mapScript);
+  }
 }
 
 /**
- * Initialize Google map, called from HTML.
+ * Arm listeners on the static map to load the real Google Map
+ * when the user clicks on it or restaurant selection changes.
+ */
+self.setStaticMapListeners = () => {
+  const mapContainer = document.getElementById('map');
+  const cSelect = document.getElementById('cuisines-select');
+  const nSelect = document.getElementById('neighborhoods-select');
+
+  // Callback used by the listeners
+  const loadMapCallback = (ev) => {
+    console.log(ev)
+    // Check if a `click` has been done just over a marker
+    if (self.restaurants && (ev.offsetX || (ev.targetTouches && ev.targetTouches.length > 0))) {
+      const targetRect = ev.target.getBoundingClientRect();
+      const x = ev.offsetX || ev.targetTouches[0].pageX - targetRect.left;
+      const y = ev.offsetY || ev.targetTouches[0].pageY - targetRect.top;
+      
+      // Base static map has 640 x 480 pixels, so the real 'px' must be adjusted
+      const px = x + Math.round((640 - mapContainer.offsetWidth) / 2);
+      // The map container usually has 480px height, so no adjustement is needed
+      const py = y;
+      // Check if the click has been done over any marker
+      const selected = self.restaurants.find(r => {
+        // Convert co-ordinates to pixel positions on map:
+        const rx = Math.round(204 + (r.latlng.lng + 74.016162) * 2893 - 13);
+        const ry = Math.round(419 - (r.latlng.lat - 40.674925) * 3836 - 40);
+        // Check if px and py are inside the marker box (26x40)
+        return px >= rx && px <= (rx + 26) && py >= ry && py <= (ry + 40);
+      });
+      if (selected) {
+        console.log('selected!')
+        if (ev.type === 'click')
+          // When 'click' completed, jump to the selected restaurant page:
+          window.location.href = `./restaurant.html?id=${selected.id}`;
+        return;
+      }
+    }
+    // No restaurant found, so remove listeners and load the real Google Map:
+    ev.preventDefault();
+    mapContainer.removeEventListener('mousedown', loadMapCallback);
+    mapContainer.removeEventListener('touchstart', loadMapCallback);
+    mapContainer.removeEventListener('click', loadMapCallback);
+    cSelect.removeEventListener('change', loadMapCallback);
+    nSelect.removeEventListener('change', loadMapCallback);
+    self.loadGoogleMaps();
+  };
+
+  // Set listeners for 'click' (includes 'tap') and drop-down lists 'change' events:
+  mapContainer.addEventListener('mousedown', loadMapCallback);
+  mapContainer.addEventListener('touchstart', loadMapCallback);
+  mapContainer.addEventListener('click', loadMapCallback);
+  cSelect.addEventListener('change', loadMapCallback);
+  nSelect.addEventListener('change', loadMapCallback);
+}
+
+/**
+ * Initialize the Google Maps object, called from mapScript.
  */
 window.initMap = () => {
   let loc = {
@@ -287,15 +344,16 @@ window.initMap = () => {
     self.resetMarkers();
 }
 
+
 /**
- * Fetch neighborhoods and cuisines as soon as the page is loaded, and update restaurants
+ * Set listeners, fetch neighborhoods and cuisines and update restaurants as soon as the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', (event) => {
 
-  //self.loadMap();
-  
+  self.setStaticMapListeners();
+
   self.fetchNeighborhoods()
     .then(fetchCuisines)
     .then(updateRestaurants);
-  
+
 });

@@ -1,3 +1,16 @@
+## STAGE 3
+
+### Optimize performance and accessibility
+- Display a static map image at startup, loading Google Maps on request, based on user interaction:
+  - The script `media/utils/build-static-map.js` generates a map image with all restaurant markers using the [Google Maps Static API](https://developers.google.com/maps/documentation/maps-static/intro).
+  - The "script" tag responsible for loading the Google Maps API has been removed from `src/index.html`. Now, the function `self.loadGoogleMaps` in `src/js/main.js` dynamically loads the real Google Maps object when invoked.
+  - Static map images are compressed and optimized by the Gulp build script, stored in `/map` and defined as `background-image` properties of the `#map` div in `css/main.css`.
+  - When the user interacts for first time with the static map, two things can happen:
+    - If the user clicked on a restaurant bookmark, the navigation is redirected to `restaurant.html?id=xxx`
+    - In any other case, and also when the restaurant selection has changed, the real Google Maps object is dynamically loaded and displayed, thus allowing the user to zoom or slide it.
+
+- Set a __title__ attribute to the `iframe` containing the Google Maps object. This is a [critical WCAG rule](https://dequeuniversity.com/rules/axe/2.2/frame-title?application=lighthouse) not currently respected by Google Maps. 
+
 ## STAGE 2
 
 ### Perform miscellaneous optimizations on CSS
