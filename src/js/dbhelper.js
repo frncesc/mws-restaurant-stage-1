@@ -2,6 +2,9 @@
 
 /* global idb */
 
+// Change this to your server protocol, host and port:
+const API_HOST = 'http://localhost:1337'
+
 /**
  * Common database helper functions.
  * @exports DBHelper
@@ -17,24 +20,21 @@ class DBHelper {
     return [340, 400, 600, 800]
   }
 
+
   /**
    * Database API endpoint for restaurants.
-   * Points to the API root service, currently returning the full list of restaurants
    * @type {string}
    */
-  static get API_ENDPOINT() {
-    const port = 1337 // Change this to your server port
-    return `http://localhost:${port}/restaurants`;
+  static get API_RESTAURANTS_ENDPOINT() {
+    return `${API_HOST}/restaurants`;
   }
 
   /**
- * Database API endpoint for reviews.
- * Points to the API root service, currently returning the full list of reviews
- * @type {string}
- */
+   * Database API endpoint for restaurant reviews.
+   * @type {string}
+   */
   static get API_REVIEWS_ENDPOINT() {
-    const port = 1337 // Change this to your server port
-    return `http://localhost:${port}/reviews`;
+    return `${API_HOST}/reviews`;
   }
 
   /**
@@ -49,16 +49,8 @@ class DBHelper {
    * Name of the main IDB table
    * @type {string}
    */
-  static get IDB_RESTAURANTS_STORE() {
+  static get IDB_STORE() {
     return 'restaurants';
-  }
-
-  /**
-   * Name of the IDB table used for reviews
-   * @type {string}
-   */
-  static get IDB_REVIEWS_STORE() {
-    return 'reviews';
   }
 
   /**
@@ -66,7 +58,7 @@ class DBHelper {
    * @type {number}
    */
   static get IDB_VERSION() {
-    return 2;
+    return 1;
   }
 
   /**
@@ -81,10 +73,7 @@ class DBHelper {
       return idb.open(DBHelper.IDB_NAME, DBHelper.IDB_VERSION, upgradeDB => {
         switch (upgradeDB.oldVersion) {
           case 0:
-            upgradeDB.createObjectStore(DBHelper.IDB_RESTAURANTS_STORE, { keyPath: 'id' });
-          case 1:
-            // TODO: Clear reviews from old IDB_RESTAURANTS_STORE
-            upgradeDB.createObjectStore(DBHelper.IDB_REVIEWS_STORE, { keyPath: 'id' });
+            upgradeDB.createObjectStore(DBHelper.IDB_STORE, { keyPath: 'id' });
           // space reserved for future updates...
         }
       }).then(db => {
@@ -101,22 +90,8 @@ class DBHelper {
    */
   static getRestaurantPromiseFromIDB(id) {
     return DBHelper.getIdb().then(db => {
-      return db.transaction(DBHelper.IDB_RESTAURANTS_STORE)
-        .objectStore(DBHelper.IDB_RESTAURANTS_STORE)
-        .get(id)
-        .then(record => record ? record.data : null);
-    });
-  }
-
-  /**
-   * Gets a review record from the IndexdedDB
-   * @param {number} id - The main identifier of the requested review (currently a number)
-   * @returns {Promise} - Resolves with an object of type `review` or _null_ if not found.
-   */
-  static getReviewPromiseFromIDB(id) {
-    return DBHelper.getIdb().then(db => {
-      return db.transaction(DBHelper.IDB_REVIEWS_STORE)
-        .objectStore(DBHelper.IDB_REVIEWS_STORE)
+      return db.transaction(DBHelper.IDB_STORE)
+        .objectStore(DBHelper.IDB_STORE)
         .get(id)
         .then(record => record ? record.data : null);
     });
@@ -128,21 +103,8 @@ class DBHelper {
    */
   static getAllRestaurantsPromiseFromIDB() {
     return DBHelper.getIdb().then(db => {
-      return db.transaction(DBHelper.IDB_RESTAURANTS_STORE)
-        .objectStore(DBHelper.IDB_RESTAURANTS_STORE)
-        .getAll()
-        .then(allObjs => allObjs ? allObjs.map(obj => obj.data) : null);
-    });
-  }
-
-  /**
-   * Gets all reviews from the IndexdedDB
-   * @returns {Promise} - Resolves with an array of objects of type `review`, or _null_ if none found.
-   */
-  static getAllReviewsPromiseFromIDB() {
-    return DBHelper.getIdb().then(db => {
-      return db.transaction(DBHelper.IDB_REVIEWS_STORE)
-        .objectStore(DBHelper.IDB_REVIEWS_STORE)
+      return db.transaction(DBHelper.IDB_STORE)
+        .objectStore(DBHelper.IDB_STORE)
         .getAll()
         .then(allObjs => allObjs ? allObjs.map(obj => obj.data) : null);
     });
@@ -155,26 +117,10 @@ class DBHelper {
    */
   static saveRestaurantToIdb(restaurant) {
     return DBHelper.getIdb().then(db => {
-      const tx = db.transaction(DBHelper.IDB_RESTAURANTS_STORE, 'readwrite');
-      tx.objectStore(DBHelper.IDB_RESTAURANTS_STORE).put({
+      const tx = db.transaction(DBHelper.IDB_STORE, 'readwrite');
+      tx.objectStore(DBHelper.IDB_STORE).put({
         id: restaurant.id,
         data: restaurant
-      });
-      return tx.complete;
-    });
-  }
-
-  /**
-   * This method adds or updates an object of type `review` on the indexedDB
-   * @param {Object} review - The `review` object to add or update
-   * @returns {Promise} - Resolves with `true` when successfull
-   */
-  static saveReviewToIdb(review) {
-    return DBHelper.getIdb().then(db => {
-      const tx = db.transaction(DBHelper.IDB_REVIEWS_STORE, 'readwrite');
-      tx.objectStore(DBHelper.IDB_REVIEWS_STORE).put({
-        id: review.id,
-        data: review
       });
       return tx.complete;
     });
@@ -187,35 +133,36 @@ class DBHelper {
    * @returns {Promise} - Resolves with `true` when successfull
    */
   static saveRestaurantIfNewer(restaurant) {
+    // TODO: Check possible changes in reviews!
     return DBHelper.getRestaurantPromiseFromIDB(restaurant.id)
       .then(currentData => {
-        // `restaurant.updatedAt` should be in ISO format, so we can perform a direct string comparision
-        if (restaurant.updatedAt && currentData && currentData.updatedAt >= restaurant.updatedAt) {
-          console.log(`"${restaurant.name}" is already updated in the database`);
-          return true;
-        } else {
+        let update = !currentData;
+        if (!update && restaurant) {
+          // First check: is 'restaurant' newer than 'currentData'?
+          update = restaurant.updatedAt > currentData.updatedAt;
+          // Second check: does 'restaurant' have reviews?
+          if (!update && restaurant.reviews) {
+            if (!currentData.reviews)
+              // 'currentData' don't have reviews, so update!
+              update = true;
+            else {
+              // Both 'restaurant' and 'currentData' have reviews. Let's check in detail:
+              if (currentData.reviews.length !== restaurant.reviews.length)
+                update = true;
+              else
+                // Find if there is any updated review in 'restaurant'
+                update = currentData.reviews.find((r, i) => restaurant.reviews[i].updatedAt > r.updatedAt)
+            }
+          }
+        }
+
+        if (update) {
           console.log(`"${restaurant.name}" ${currentData ? 'updated in' : 'added to'} the database`)
           return DBHelper.saveRestaurantToIdb(restaurant);
         }
-      });
-  }
-
-  /**
-   * This method adds or updates an object of type `review` on the indexedDB
-   * only if not already present or if the provided data newer than the stored one.
-   * @param {Object} review - The `review` object to add or update
-   * @returns {Promise} - Resolves with `true` when successfull
-   */
-  static saveReviewIfNewer(review) {
-    return DBHelper.getReviewPromiseFromIDB(review.id)
-      .then(currentData => {
-        // `restaurant.updatedAt` should be in ISO format, so we can perform a direct string comparision
-        if (review.updatedAt && currentData && currentData.updatedAt >= review.updatedAt) {
-          console.log(`Review "${review.id}" is already updated in the database`);
+        else {
+          console.log(`"${restaurant.name}" is already updated in the database`);
           return true;
-        } else {
-          console.log(`Review "${review.id}" ${currentData ? 'updated in' : 'added to'} the database`)
-          return DBHelper.saveReviewToIdb(restaurant);
         }
       });
   }
@@ -233,18 +180,6 @@ class DBHelper {
   }
 
   /**
-   * Processes an array of `review` objects, storing or updating them on the IndexedDB
-   * only when they are new or have newer data.
-   * @param {Object[]} reviews - The array of reviews to be processed
-   * @returns {Promise} - Resolves with an array of `true` when successfull
-   */
-  static saveAllReviewsIfNewer(reviews) {
-    return Promise.all(
-      reviews.map(review => DBHelper.saveReviewIfNewer(review))
-    )
-  }
-
-  /**
    * Fetch all restaurants.
    * The resulting array will be stored or updated on the IndexedDB, and
    * recorded as a static member of `DBHelper` for later use.
@@ -254,7 +189,7 @@ class DBHelper {
     if (DBHelper._RESTAURANTS)
       return Promise.resolve(DBHelper._RESTAURANTS);
 
-    return fetch(DBHelper.API_ENDPOINT)
+    return fetch(DBHelper.API_RESTAURANTS_ENDPOINT)
       .then(response => {
         if (response.ok)
           return response.json();
@@ -287,48 +222,6 @@ class DBHelper {
   }
 
   /**
-   * Fetch all reviews.
-   * The resulting array will be stored or updated on the IndexedDB, and
-   * recorded as a static member of `DBHelper` for later use.
-   * @returns {Promise} - Resolves with an array of `review` objects.
-   */
-  static fetchReviews() {
-    if (DBHelper._REVIEWS)
-      return Promise.resolve(DBHelper._REVIEWS);
-
-    return fetch(DBHelper.API_REVIEWS_ENDPOINT)
-      .then(response => {
-        if (response.ok)
-          return response.json();
-        throw new Error('Bad network response');
-      })
-      .then(reviews => {
-        // Save `restaurants` for later use
-        DBHelper._REVIEWS = reviews;
-        // Store the restaurants list into IDB
-        DBHelper.saveAllReviewsIfNewer(reviews)
-          .then(() => {
-            console.log(`Reviews saved in IDB!`);
-          });
-        // return the requested array of restaurant objects
-        return reviews;
-      })
-      .catch(err => {
-        // Maybe we are off-line? Try to get data from IDB
-        return DBHelper.getAllReviewsPromiseFromIDB()
-          .then(reviews => {
-            // Save `restaurants` for later use
-            DBHelper._REVIEWS = reviews;
-            return reviews;
-          })
-          .catch(idbErr => {
-            console.log(`Error requesting the reviews list: ${err}`);
-            throw new Error(idbErr);
-          });
-      });
-  }
-
-  /**
    * Fetch a restaurant by its ID
    * @param {number} id - The main identifier of the requested restaurant (currently a number)
    * @returns {Promise} - Resolves with a `restaurant` object, or _null_ if not exists
@@ -341,15 +234,25 @@ class DBHelper {
         return Promise.resolve(restaurant);
     }
 
-    return fetch(`${DBHelper.API_ENDPOINT}/${id}`)
+    const fetchRestaurant = fetch(`${DBHelper.API_RESTAURANTS_ENDPOINT}/${id}`)
       .then(response => {
         if (response.ok)
           return response.json();
         throw new Error('Bad network response');
-      })
-      .then(restaurant => {
-        // Initialize `_RESTAURANTS` if needed
+      });
+
+    const fetchReviews = fetch(`${DBHelper.API_REVIEWS_ENDPOINT}/?restaurant_id=${id}`)
+      .then(response => {
+        if (response.ok)
+          return response.json();
+        throw new Error('Bad network response');
+      });
+
+    return Promise.all([fetchRestaurant, fetchReviews])
+      .then(results => {
         DBHelper._RESTAURANTS = DBHelper._RESTAURANTS || [];
+        const restaurant = results[0];
+        restaurant.reviews = results[1] || []; // Reviews is the second value in 'results'
         DBHelper._RESTAURANTS.push(restaurant);
         // Save also `restaurant` in IDB
         DBHelper.saveRestaurantIfNewer(restaurant);
@@ -360,43 +263,6 @@ class DBHelper {
         return DBHelper.getRestaurantPromiseFromIDB(id)
           .catch(idbErr => {
             console.log(`Error requesting restaurant data with ID "${id}": ${err}`);
-            throw new Error(idbErr);
-          })
-      });
-  }
-
-  /**
-   * Fetch a review by its ID
-   * @param {number} id - The main identifier of the requested review (currently a number)
-   * @returns {Promise} - Resolves with a `review` object, or _null_ if not exists
-   */
-  static fetchReviewById(id) {
-    if (DBHelper._REVIEWS) {
-      // Check if the requested restaurant is alredy stored in `_RESTAURANTS`
-      const review = DBHelper._REVIEWS.find(review => review.id === id);
-      if (review)
-        return Promise.resolve(review);
-    }
-
-    return fetch(`${DBHelper.API_REVIEWS_ENDPOINT}/${id}`)
-      .then(response => {
-        if (response.ok)
-          return response.json();
-        throw new Error('Bad network response');
-      })
-      .then(review => {
-        // Initialize `_REVIEWS` if needed
-        DBHelper._REVIEWS = DBHelper._REVIEWS || [];
-        DBHelper._REVIEWS.push(review);
-        // Save also `restaurant` in IDB
-        DBHelper.saveReviewIfNewer(review);
-        return review;
-      })
-      .catch(err => {
-        // Maybe we are off-line? Try to get data from IDB
-        return DBHelper.getReviewPromiseFromIDB(id)
-          .catch(idbErr => {
-            console.log(`Error requesting review data with ID "${id}": ${err}`);
             throw new Error(idbErr);
           })
       });

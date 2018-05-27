@@ -17,6 +17,7 @@ var map;
  * Initialize Google map, called from HTML.
  */
 window.initMap = () => {
+  console.log('>>> initMap called!')
   const mapContainer = document.getElementById('map');
   fetchRestaurantFromURL()
     .then(restaurant => {
