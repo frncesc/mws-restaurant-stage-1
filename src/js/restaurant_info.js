@@ -10,35 +10,35 @@ if ('serviceWorker' in navigator) {
 /**
  * Common variables
  */
-let restaurant;
-var map;
+let restaurant = null;
+let mapObject = null;
 
 /**
  * Initialize Google map, called from HTML.
  */
 window.initMap = () => {
-  console.log('>>> initMap called!')
-  const mapContainer = document.getElementById('map');
-  fetchRestaurantFromURL()
-    .then(restaurant => {
-      self.map = new google.maps.Map(mapContainer, {
-        zoom: 16,
-        center: restaurant.latlng,
-        //scrollwheel: false,
-        gestureHandling: 'cooperative',
-      });
-      self.fillBreadcrumb();
 
-      // Add 'title' attribute to the iframe map container
-      const titleListener = self.map.addListener('tilesloaded', ev => {
-        const mapFrame = mapContainer.querySelector('iframe');
-        if (mapFrame)
-          mapFrame.setAttribute('title', 'Map');
-        titleListener.remove();
-      });
-
-      DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
+  // Check if restaurant data is already loaded and map not initialized
+  if (self.restaurant && !self.mapObject) {
+    const mapContainer = document.getElementById('map');
+    self.mapObject = new google.maps.Map(mapContainer, {
+      zoom: 16,
+      center: self.restaurant.latlng,
+      //scrollwheel: false,
+      gestureHandling: 'cooperative',
     });
+
+    // Add 'title' attribute to the iframe map container
+    const titleListener = self.mapObject.addListener('tilesloaded', ev => {
+      const mapFrame = mapContainer.querySelector('iframe');
+      if (mapFrame)
+        mapFrame.setAttribute('title', 'Map');
+      titleListener.remove();
+    });
+
+    // Set map marker
+    DBHelper.mapMarkerForRestaurant(self.restaurant, self.mapObject);
+  }
 }
 
 /**
@@ -62,6 +62,7 @@ self.fetchRestaurantFromURL = () => {
 
         self.restaurant = restaurant;
         self.fillRestaurantHTML();
+        self.fillBreadcrumb();
         return restaurant;
       });
   }
@@ -206,3 +207,15 @@ self.getParameterByName = (name, url) => {
     return '';
   return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
+
+/**
+ * Update restaurant data as soon as the page is loaded.
+ */
+document.addEventListener('DOMContentLoaded', (event) => {
+  self.fetchRestaurantFromURL()
+    .then(restaurant => {
+      // Check if Maps API is already loaded
+      if (window.google && window.google.maps)
+        self.initMap()
+    });  
+});

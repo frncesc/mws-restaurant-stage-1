@@ -47,7 +47,7 @@ const PRECACHE_ASSETS_DIST = [
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(PRECACHE)
-      // To be replaced by `PRECACHE_SCRIPTS_DIST` in Gulp:
+      // To be replaced by `PRECACHE_ASSETS_DIST` by Gulp:
       .then(cache => cache.addAll(PRECACHE_URLS.concat(PRECACHE_ASSETS_SRC)))
       .then(self.skipWaiting())
   );

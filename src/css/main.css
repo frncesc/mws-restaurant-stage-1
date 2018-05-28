@@ -1,44 +1,44 @@
 /* ====================== Main map ====================== */
 
 .mainMap {
-  background-image: url(map/map640.jpg);
+  background-image: url(../map/map640.jpg);
   background-repeat: no-repeat;
   background-position: center;
 }
 
 @media screen and (min-width: 640px) {
   .mainMap {
-    background-image: url(map/map800.jpg);
+    background-image: url(../map/map800.jpg);
   }
 }
 
 @media screen and (min-width: 800px) {
   .mainMap {
-    background-image: url(map/map1024.jpg);
+    background-image: url(../map/map1024.jpg);
   }
 }
 
 @media screen and (min-width: 1024px) {
   .mainMap {
-    background-image: url(map/map1280.jpg);
+    background-image: url(../map/map1280.jpg);
   }
 }
 
 @media screen and (min-width: 1280px) {
   .mainMap {
-    background-image: url(map/map1366.jpg);
+    background-image: url(../map/map1366.jpg);
   }
 }
 
 @media screen and (min-width: 1366px) {
   .mainMap {
-    background-image: url(map/map1920.jpg);
+    background-image: url(../map/map1920.jpg);
   }
 }
 
 @media screen and (min-width: 1920px) {
   .mainMap {
-    background-image: url(map/map2560.jpg);
+    background-image: url(../map/map2560.jpg);
   }
 }
 
