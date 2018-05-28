@@ -36,7 +36,7 @@ window.initMap = () => {
           mapFrame.setAttribute('title', 'Map');
         titleListener.remove();
       });
-      
+
       DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
     });
 }
@@ -93,14 +93,6 @@ self.fillRestaurantHTML = (restaurant = self.restaurant) => {
   picImage.alt = `${restaurant.name} restaurant photo`;
   picImage.sizes = 'calc(100vw - 2rem)';
   picImage.src = `pictures/${fileName}-800px.${extension}`;
-
-  // Old method:
-  //const image = document.getElementById('restaurant-img');
-  //image.className = 'restaurant-img';
-  //image.alt = `${restaurant.name} restaurant photo`;
-  //image.sizes = 'calc(100vw - 2rem)';
-  //image.srcset = DBHelper.IMG_SIZES.map(size => `pictures/${fileName}-${size}px.${extension} ${size}w`).join(', ') + `, pictures/${fileName}-800px.${extension}`;
-  //image.src = `pictures/${fileName}-800px.${extension}`;
 
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = restaurant.cuisine_type;
@@ -170,7 +162,8 @@ self.createReviewHTML = (review) => {
   const date = document.createElement('div');
   date.className = 'review-date';
   date.setAttribute('aria-label', 'Review date');
-  date.innerHTML = review.date;
+  const reviewDate = new Date(review.updatedAt);
+  date.innerHTML = reviewDate.toLocaleDateString();
   header.appendChild(date);
 
   article.appendChild(header);
