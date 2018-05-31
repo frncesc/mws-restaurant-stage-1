@@ -160,6 +160,19 @@ self.createRestaurantHTML = (restaurant) => {
   picture.classList.add('empty-picture');
   li.append(picture);
 
+  // Just checking with MDL
+  picture.addEventListener('click', () => { 
+    const snack = self.getSnackbar();
+    snack.show({
+      message: 'Hi!',
+      actionText: 'DISMISS',
+      actionHandler: function(event) {
+        console.log('bye!');
+      },
+      timeout: 3000      
+    });
+  });
+
   const name = document.createElement('h3');
   name.innerHTML = restaurant.name;
   li.append(name);
@@ -271,7 +284,6 @@ self.setStaticMapListeners = () => {
 
   // Callback used by the listeners
   const loadMapCallback = (ev) => {
-    console.log(ev)
     // Check if a `click` has been done just over a marker
     if (self.restaurants && (ev.offsetX || (ev.targetTouches && ev.targetTouches.length > 0))) {
       const targetRect = ev.target.getBoundingClientRect();
@@ -291,9 +303,8 @@ self.setStaticMapListeners = () => {
         return px >= rx && px <= (rx + 26) && py >= ry && py <= (ry + 40);
       });
       if (selected) {
-        console.log('selected!')
         if (ev.type === 'click')
-          // When 'click' completed, jump to the selected restaurant page:
+          // Jump to the selected restaurant page:
           window.location.href = `./restaurant.html?id=${selected.id}`;
         return;
       }
@@ -344,6 +355,13 @@ window.initMap = () => {
     self.resetMarkers();
 }
 
+
+self.snackbar = null;
+self.getSnackbar = () => {
+  if(!self.snackbar)
+    self.snackbar = self.snackbar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
+  return self.snackbar;
+}
 
 /**
  * Set listeners, fetch neighborhoods and cuisines and update restaurants as soon as the page is loaded.

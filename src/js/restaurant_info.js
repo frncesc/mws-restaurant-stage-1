@@ -98,6 +98,21 @@ self.fillRestaurantHTML = (restaurant = self.restaurant) => {
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = restaurant.cuisine_type;
 
+  // Just checking with MDL
+  cuisine.addEventListener('click', () => { 
+    const snack = document.querySelector('#snackbar');
+    snack.MaterialSnackbar.showSnackbar({
+      message: 'Hi!',
+      actionHandler: function(event) {
+        snack.classList.remove('mdl-snackbar--active');
+        console.log('bye!');
+      },
+      actionText: 'Close',
+      timeout: 3000      
+    });
+  });
+  
+
   // fill operating hours
   if (restaurant.operating_hours) {
     self.fillRestaurantHoursHTML();
@@ -217,5 +232,5 @@ document.addEventListener('DOMContentLoaded', (event) => {
       // Check if Maps API is already loaded
       if (window.google && window.google.maps)
         self.initMap()
-    });  
+    });
 });
