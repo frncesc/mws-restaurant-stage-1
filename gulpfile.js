@@ -117,7 +117,7 @@ gulp.task('copy:dist', function () {
     gulp.src(['src/js/mdc.snackbar.js', 'src/js/idb.js', 'src/js/intersection-observer.js', 'src/js/dbhelper.js', 'src/js/main.js'])
       .pipe(babel({ presets: ['env'] }))
       .pipe(concat('bundle-main.js'))
-      //.pipe(uglify())
+      .pipe(uglify())
       .pipe(gulp.dest('dist/js')),
     // Concat and minimize 'restaurant_info.js':
     gulp.src(['src/js/mdc.snackbar.js', 'src/js/idb.js', 'src/js/dbhelper.js', 'src/js/restaurant_info.js'])

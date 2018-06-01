@@ -99,19 +99,10 @@ self.fillRestaurantHTML = (restaurant = self.restaurant) => {
   cuisine.innerHTML = restaurant.cuisine_type;
 
   // Just checking with MDL
-  cuisine.addEventListener('click', () => { 
-    const snack = document.querySelector('#snackbar');
-    snack.MaterialSnackbar.showSnackbar({
-      message: 'Hi!',
-      actionHandler: function(event) {
-        snack.classList.remove('mdl-snackbar--active');
-        console.log('bye!');
-      },
-      actionText: 'Close',
-      timeout: 3000      
-    });
+  cuisine.addEventListener('click', () => {
+    console.log('Ep')
+    self.showSnackBar({ message: 'Just testing!' });
   });
-  
 
   // fill operating hours
   if (restaurant.operating_hours) {
@@ -222,6 +213,23 @@ self.getParameterByName = (name, url) => {
     return '';
   return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
+
+/**
+ * Show the snackbar with the provided options
+ * @see: https://material.io/develop/web/components/snackbars/
+ */
+self.snackbar = null;
+self.showSnackBar = (options) => {
+  if (!self.snackbar)
+    self.snackbar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
+  const DEFAULT_OPTIONS = {
+    message: '---',
+    actionText: 'DISMISS',
+    actionHandler: () => { },
+    timeout: 3000
+  };
+  snackbar.show(Object.assign(DEFAULT_OPTIONS, options));
+};
 
 /**
  * Update restaurant data as soon as the page is loaded.

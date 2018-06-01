@@ -161,16 +161,8 @@ self.createRestaurantHTML = (restaurant) => {
   li.append(picture);
 
   // Just checking with MDL
-  picture.addEventListener('click', () => { 
-    const snack = self.getSnackbar();
-    snack.show({
-      message: 'Hi!',
-      actionText: 'DISMISS',
-      actionHandler: function(event) {
-        console.log('bye!');
-      },
-      timeout: 3000      
-    });
+  picture.addEventListener('click', () => {
+    self.showSnackBar({message: 'Just testing!'});
   });
 
   const name = document.createElement('h3');
@@ -289,7 +281,7 @@ self.setStaticMapListeners = () => {
       const targetRect = ev.target.getBoundingClientRect();
       const x = ev.offsetX || ev.targetTouches[0].pageX - targetRect.left;
       const y = ev.offsetY || ev.targetTouches[0].pageY - targetRect.top;
-      
+
       // Base static map has 640 x 480 pixels, so the real 'px' must be adjusted
       const px = x + Math.round((640 - mapContainer.offsetWidth) / 2);
       // The map container usually has 480px height, so no adjustement is needed
@@ -355,13 +347,22 @@ window.initMap = () => {
     self.resetMarkers();
 }
 
-
+/**
+ * Show the snackbar with the provided options
+ * @see: https://material.io/develop/web/components/snackbars/
+ */
 self.snackbar = null;
-self.getSnackbar = () => {
-  if(!self.snackbar)
-    self.snackbar = self.snackbar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
-  return self.snackbar;
-}
+self.showSnackBar = (options) => {
+  if (!self.snackbar)
+    self.snackbar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
+  const DEFAULT_OPTIONS = {
+    message: '---',
+    actionText: 'DISMISS',
+    actionHandler: () => {},
+    timeout: 3000
+  };
+  snackbar.show(Object.assign(DEFAULT_OPTIONS, options));
+};
 
 /**
  * Set listeners, fetch neighborhoods and cuisines and update restaurants as soon as the page is loaded.
