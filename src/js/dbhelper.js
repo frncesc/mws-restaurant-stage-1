@@ -54,11 +54,19 @@ class DBHelper {
   }
 
   /**
+   * Name of the IDB table used to store pending operations
+   * @type {string}
+   */
+  static get IDB_PENDING_ACTIONS() {
+    return 'pending_actions';
+  }
+
+  /**
    * Current version of the schema used in IDB
    * @type {number}
    */
   static get IDB_VERSION() {
-    return 1;
+    return 2;
   }
 
   /**
@@ -74,6 +82,8 @@ class DBHelper {
         switch (upgradeDB.oldVersion) {
           case 0:
             upgradeDB.createObjectStore(DBHelper.IDB_STORE, { keyPath: 'id' });
+          case 1:
+            upgradeDB.createObjectStore(DBHelper.IDB_PENDING_ACTIONS, { keyPath: 'since' });
           // space reserved for future updates...
         }
       }).then(db => {
@@ -81,6 +91,75 @@ class DBHelper {
         DBHelper._IDB = db;
         return db;
       });
+  }
+
+  /**
+   * Try to perform an API action that implies data modification.
+   * @param {string} type - Type of action. Valid values are: 'SET_FAVORITE', 'ADD_REVIEW', 'EDIT_REVIEW' and 'DELETE_REVIEW'
+   * @param {any} data - The specific data associated with the requested action
+   * @returns {Promise} - Resolves with a [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) if the action
+   * is successfull. Rejects otherwise.
+   */
+  static tryAction(type, data) {
+
+    let result = null;
+
+    switch (type) {
+      case 'SET_FAVORITE':
+        if (data && data.restaurant_id) {
+          const url = `${API_HOST}/restaurants/${data.restaurant_id}/?is_favorite=${data.favorite ? 'true' : 'false'}`;
+          result = fetch(url, { method: 'PATCH' });
+        }
+        break;
+
+      case 'ADD_REVIEW':
+        if (data && data.restaurant_id) {
+          const url = `${API_HOST}/reviews/`;
+          result = fetch(url, {
+            method: 'POST',
+            body: JSON.stringify({
+              restaurant_id: data.restaurant_id,
+              name: data.name || 'Unknown user',
+              rating: data.rating || 0,
+              comments: data.comments || '',
+            })
+          });
+        }
+        break;
+
+      case 'EDIT_REVIEW':
+        if (data && data.review_id) {
+          const url = `${API_HOST}/reviews/${data.review_id}`;
+          result = fetch(url, {
+            method: 'PATCH',
+            body: JSON.stringify({
+              name: data.name || 'Unknown user',
+              rating: data.rating || 0,
+              comments: data.comments || '',
+            })
+          });
+        }
+        break;
+
+      case 'DELETE_REVIEW':
+        if (data && data.review_id) {
+          const url = `${API_HOST}/reviews/${data.review_id}`;
+          result = fetch(url, { method: 'DELETE' });
+        }
+        break;
+
+      default:
+        break;
+    }
+
+    if (result)
+      return result.then(response => {
+        if (response.ok)
+          return response.json();
+        throw new Error('Bad network response');
+      });
+
+    return Promise.reject(`Unknown action: ${type} (${JSON.stringify(data || {})})`);
   }
 
   /**
