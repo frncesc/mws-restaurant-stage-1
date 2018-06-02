@@ -162,6 +162,30 @@ class DBHelper {
     return Promise.reject(`Unknown action: ${type} (${JSON.stringify(data || {})})`);
   }
 
+  static performAction(type, data, showSnackbar) {
+    return DBHelper.tryAction(type, data)
+      .then(json => {
+        console.log(`Action ${type} (${data}) performed!`);
+      })
+      .catch(err => {
+        console.log(`Unable to perform action ${type}! Storing for resume.`);
+        DBHelper.getIdb().then(db => {
+          const tx = db.transaction(DBHelper.IDB_PENDING_ACTIONS, 'readwrite');
+          tx.objectStore(DBHelper.IDB_PENDING_ACTIONS).put({
+            since: Date.now(),
+            data: { type, data }
+          });
+          return tx.complete;
+        }).then(stored => {
+          showSnackbar({
+            message: stored
+              ? 'Unable to update data at this moment. Will try again later.'
+              : 'Fatal error :-('
+          });
+        })
+      })
+  }
+
   /**
    * Gets a restaurant record from the IndexdedDB
    * @param {number} id - The main identifier of the requested restaurant (currently a number)

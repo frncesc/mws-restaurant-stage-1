@@ -162,8 +162,20 @@ self.createRestaurantHTML = (restaurant) => {
 
   // Just checking with MDL
   picture.addEventListener('click', () => {
-    self.showSnackBar({message: 'Just testing!'});
+    self.showSnackBar({ message: 'Just testing!' });
   });
+
+  const favCheck = document.createElement('input');
+  favCheck.type = 'checkbox';
+  favCheck.checked = restaurant.is_favorite;
+  favCheck.addEventListener('change', ev => {
+    const data = {
+      restaurant_id: restaurant.id,
+      favorite: favCheck.checked,
+    }
+    DBHelper.performAction('SET_FAVORITE', data, self.showSnackBar);
+  });
+  li.append(favCheck);
 
   const name = document.createElement('h3');
   name.innerHTML = restaurant.name;
@@ -358,7 +370,7 @@ self.showSnackBar = (options) => {
   const DEFAULT_OPTIONS = {
     message: '---',
     actionText: 'DISMISS',
-    actionHandler: () => {},
+    actionHandler: () => { },
     timeout: 3000
   };
   snackbar.show(Object.assign(DEFAULT_OPTIONS, options));
