@@ -94,11 +94,10 @@ class DBHelper {
   }
 
   /**
-   * Try to perform an API action that implies data modification.
+   * Try to make an API transaction that modifies stored data.
    * @param {string} type - Type of action. Valid values are: 'SET_FAVORITE', 'ADD_REVIEW', 'EDIT_REVIEW' and 'DELETE_REVIEW'
    * @param {any} data - The specific data associated with the requested action
-   * @returns {Promise} - Resolves with a [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) if the action
-   * is successfull. Rejects otherwise.
+   * @returns {Promise} - Resolves with the object received as a response when the transaction is satisfactory. Rejects otherwise.
    */
   static tryAction(type, data) {
 
@@ -107,6 +106,18 @@ class DBHelper {
     switch (type) {
       case 'SET_FAVORITE':
         if (data && data.restaurant_id) {
+          // Update restaurant data on IDB
+          DBHelper.getRestaurantPromiseFromIDB(data.restaurant_id)
+            .then(restaurant => {
+              restaurant.is_favorite = data.favorite;
+              restaurant.updatedAt = Date.now();
+              return DBHelper.saveRestaurantToIdb(restaurant);
+            })
+            .catch(err => {
+              console.err(`Unable to update the 'favorite' state on the IDB for restaurant #${data.restaurant_id}`);
+            });
+
+          // Call the API
           const url = `${API_HOST}/restaurants/${data.restaurant_id}/?is_favorite=${data.favorite ? 'true' : 'false'}`;
           result = fetch(url, { method: 'PATCH' });
         }
@@ -162,13 +173,21 @@ class DBHelper {
     return Promise.reject(`Unknown action: ${type} (${JSON.stringify(data || {})})`);
   }
 
+  /**
+   * Try to make a transaction that modifies stored data. If a network error occurs, the transaction is saved
+   * on IDB to resume work later.
+   * @param {string} type - Type of action. Valid values are: 'SET_FAVORITE', 'ADD_REVIEW', 'EDIT_REVIEW' and 'DELETE_REVIEW'
+   * @param {any} data - The specific data associated with the requested action
+   * @param {function} showSnackbar - The function used to display a snackbar with a short message
+   * @returns {Promise} - Resolves with the object received as a response when the transaction is satisfactory. Rejects otherwise.
+   */
   static performAction(type, data, showSnackbar) {
     return DBHelper.tryAction(type, data)
       .then(json => {
         console.log(`Action ${type} (${data}) performed!`);
       })
       .catch(err => {
-        console.log(`Unable to perform action ${type}! Storing for resume.`);
+        console.log(`Unable to perform action ${type}! Storing for resuming it later.`);
         DBHelper.getIdb().then(db => {
           const tx = db.transaction(DBHelper.IDB_PENDING_ACTIONS, 'readwrite');
           tx.objectStore(DBHelper.IDB_PENDING_ACTIONS).put({
@@ -176,12 +195,11 @@ class DBHelper {
             data: { type, data }
           });
           return tx.complete;
-        }).then(stored => {
-          showSnackbar({
-            message: stored
-              ? 'Unable to update data at this moment. Will try again later.'
-              : 'Fatal error :-('
-          });
+        }).then(() => {
+          showSnackbar({ message: 'Unable to update data at this moment. Will try again later.' });
+        }).catch(err => {
+          console.err(`Error storing pending transaction on IDB: ${err}`);
+          showSnackbar({ message: 'Your request cannot be processed now. Please try again later.' })
         })
       })
   }

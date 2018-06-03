@@ -143,6 +143,24 @@ self.fillRestaurantsHTML = (restaurants = self.restaurants) => {
   }
 }
 
+self.toggleFavorite = (ev) => {
+  const chk = ev.target;
+  if (chk && chk.id.length > 3) {
+    const restaurant_id = Number(chk.id.substr(3));
+    let favorite = chk.getAttribute('aria-checked') !== 'true';
+    chk.setAttribute('aria-checked', favorite);
+    chk.title = favorite ? 'Unset as favorite' : 'Set as favorite';
+    DBHelper.performAction('SET_FAVORITE', { restaurant_id, favorite }, self.showSnackBar);
+  }
+}
+
+self.handleFavKeyPress = (ev) => {
+  if (ev.keyCode === 32 || ev.keyCode === 13) {
+    ev.preventDefault();
+    self.toggleFavorite(ev);
+  }
+}
+
 /**
  * Create restaurant HTML.
  */
@@ -160,23 +178,6 @@ self.createRestaurantHTML = (restaurant) => {
   picture.classList.add('empty-picture');
   li.append(picture);
 
-  // Just checking with MDL
-  picture.addEventListener('click', () => {
-    self.showSnackBar({ message: 'Just testing!' });
-  });
-
-  const favCheck = document.createElement('input');
-  favCheck.type = 'checkbox';
-  favCheck.checked = restaurant.is_favorite;
-  favCheck.addEventListener('change', ev => {
-    const data = {
-      restaurant_id: restaurant.id,
-      favorite: favCheck.checked,
-    }
-    DBHelper.performAction('SET_FAVORITE', data, self.showSnackBar);
-  });
-  li.append(favCheck);
-
   const name = document.createElement('h3');
   name.innerHTML = restaurant.name;
   li.append(name);
@@ -193,6 +194,17 @@ self.createRestaurantHTML = (restaurant) => {
   more.innerHTML = 'View Details';
   more.href = DBHelper.urlForRestaurant(restaurant);
   li.append(more);
+
+  const favCheck = document.createElement('span');
+  favCheck.id = `fav${restaurant.id}`;
+  favCheck.className = 'favorite'
+  favCheck.setAttribute('role', 'checkbox');
+  favCheck.setAttribute('tabindex', 0);
+  favCheck.setAttribute('aria-checked', restaurant.is_favorite);
+  favCheck.title = restaurant.is_favorite ? 'Unset as favorite' : 'Set as favorite';;
+  favCheck.onclick = self.toggleFavorite;
+  favCheck.onkeypress = self.handleFavKeyPress;
+  li.append(favCheck);
 
   // Register the element on the IntersectionObserver
   self.io.observe(li);

@@ -1,7 +1,6 @@
 html {
   line-height: 1.15;
   -webkit-text-size-adjust: 100%;
-  
   --paper: #fdfdfd;
   --light-paper: white;
   --gray-paper: #eee;
@@ -84,8 +83,7 @@ body>header h1 a {
   color: var(--paper);
 }
 
-body>header h1 a:focus,
-a:hover {
+body>header h1 a:focus, a:hover {
   color: var(--accent-over-dark);
 }
 
@@ -111,7 +109,7 @@ a:hover {
   background-color: var(--gray-paper);
 }
 
-/* Small mobile devices*/
+/* ====================== Small mobile devices ====================== */
 
 @media screen and (max-width: 374px) {
   body>header h1 {
@@ -119,7 +117,8 @@ a:hover {
   }
 }
 
-/* From normalize.css: */ 
+/* ====================== From normalize.css ====================== */
+
 button, input, optgroup, select, textarea {
   font-family: inherit;
   font-size: 100%;
@@ -147,5 +146,25 @@ button::-moz-focus-inner, [type="button"]::-moz-focus-inner, [type="reset"]::-mo
 
 button:-moz-focusring, [type="button"]:-moz-focusring, [type="reset"]:-moz-focusring, [type="submit"]:-moz-focusring {
   outline: 1px dotted ButtonText;
+}
+
+/* ====================== Custom favorite checkbox ====================== 
+   Based on: https://medium.com/@robdel12/creating-an-accessible-custom-checkbox-64bd87b5c195 
+   Icons from: https://material.io/tools/icons
+*/
+
+span.favorite {
+  background-image: url('../icons/favorite-off.svg');
+  height: 24px;
+  width: 24px;
+  float: right;
+  /* display: inline-block; */
+  vertical-align: middle;
+  padding: 0 0 0 0px;
+  margin: 1rem;
+}
+
+span.favorite[aria-checked=true] {
+  background-image: url('../icons/favorite-on.svg');
 }
 

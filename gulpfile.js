@@ -62,6 +62,16 @@ gulp.task('build:logo', () => {
     .pipe(gulp.dest('src/logo'));
 });
 
+// Copy the original SVG icons from `media/icons` to `src/icons`
+gulp.task('build:icons', () => {
+  return gulp.src('media/icons/*.svg')
+    // Act only when the original media is newer than the auto-generated one
+    .pipe(newer({
+      dest: 'src/icons',
+    }))
+    .pipe(gulp.dest('src/icons'));
+});
+
 // Take the original files located in `media/map` and generate
 // optimized images in JPEG, PNG and WEBP formats
 const MAP_FORMATS = ['jpg'];
@@ -102,6 +112,7 @@ gulp.task('serve:src', function () {
 gulp.task('watch:src', function () {
   gulp.watch('media/pictures/*', ['build-pictures']);
   gulp.watch('media/logo/icon.png', ['build-logo']);
+  gulp.watch('media/icons/*.svg', ['build-icons']);
   gulp.watch('media/map/*.png', ['build-map']);
 })
 
@@ -142,7 +153,7 @@ gulp.task('copy:dist', function () {
       }))
       .pipe(gulp.dest('dist')),
     // Copy the remaining assets:
-    gulp.src('src/**/*.{json,jpg,png,webp}')
+    gulp.src('src/**/*.{json,jpg,png,webp,svg}')
       .pipe(newer('dist'))
       .pipe(gulp.dest('dist'))
   );
@@ -165,12 +176,13 @@ gulp.task('watch:dist', function () {
   gulp.watch(['src/**/*.{html,js,css,json}'], ['copy:dist']);
   gulp.watch('media/pictures/*', ['build:pictures', 'copy:dist']);
   gulp.watch('media/logo/icon.png', ['build:logo', 'copy:dist']);
+  gulp.watch('media/icons/*.svg', ['build:icons', 'copy:dist']);
   gulp.watch('media/map/*', ['build:map', 'copy:dist']);
 })
 
 // Build the `dist` release
 gulp.task('build:dist', function (callback) {
-  runSequence('clean:dist', ['build:pictures', 'build:logo', 'build:map'], 'copy:dist', callback);
+  runSequence('clean:dist', ['build:pictures', 'build:logo', 'build:icons', 'build:map'], 'copy:dist', callback);
 });
 
 // Build `dist`, launch the HTTP server, launch the main page in a browser and reload it when changes are detected
@@ -180,7 +192,7 @@ gulp.task('serve', ['build:dist'], function (callback) {
 
 // Prepare the `src` directory for a debug session
 gulp.task('build:debug', function (callback) {
-  runSequence(['build:pictures', 'build:logo', 'build:map'], callback);
+  runSequence(['build:pictures', 'build:logo', 'build:icons', 'build:map'], callback);
 });
 
 
