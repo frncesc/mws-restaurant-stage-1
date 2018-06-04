@@ -97,20 +97,29 @@ self.fillCuisinesHTML = (cuisines = self.cuisines) => {
  * Update page and map for current restaurants.
  * @returns {Promise} - Resolves with an array of `restaurant` objects
  */
-self.updateRestaurants = () => {
+self.updateRestaurants = (updateMap = true) => {
   const cSelect = document.getElementById('cuisines-select');
   const nSelect = document.getElementById('neighborhoods-select');
+  const fSelect = document.getElementById('fav-select');
 
   const cIndex = cSelect.selectedIndex;
   const nIndex = nSelect.selectedIndex;
+  const fIndex = fSelect.selectedIndex;
 
   const cuisine = cSelect[cIndex].value;
   const neighborhood = nSelect[nIndex].value;
+  const fav = fSelect[fIndex].value === 'fav';
 
-  return DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood)
+  return DBHelper.fetchRestaurantByCuisineNeighborhoodAndFav(cuisine, neighborhood, fav)
     .then(restaurants => {
       self.resetRestaurants(restaurants);
       self.fillRestaurantsHTML();
+      if (updateMap) {
+        if (!self.mapScript)
+          self.loadGoogleMaps();
+        else
+          self.resetMarkers();
+      }
       return restaurants;
     });
 }
@@ -143,6 +152,10 @@ self.fillRestaurantsHTML = (restaurants = self.restaurants) => {
   }
 }
 
+/**
+ * Toggle the 'favorite' state of a restaurant in response to an action event
+ * @param {Event} ev 
+ */
 self.toggleFavorite = (ev) => {
   const chk = ev.target;
   if (chk && chk.id.length > 3) {
@@ -150,10 +163,15 @@ self.toggleFavorite = (ev) => {
     let favorite = chk.getAttribute('aria-checked') !== 'true';
     chk.setAttribute('aria-checked', favorite);
     chk.title = favorite ? 'Unset as favorite' : 'Set as favorite';
+    restaurants.find(r => r.id === restaurant_id).is_favorite = favorite;
     DBHelper.performAction('SET_FAVORITE', { restaurant_id, favorite }, self.showSnackBar);
   }
 }
 
+/**
+ * Handles keyboard events triggered by the 'favorite' checkboxes
+ * @param {Event} ev 
+ */
 self.handleFavKeyPress = (ev) => {
   if (ev.keyCode === 32 || ev.keyCode === 13) {
     ev.preventDefault();
@@ -162,7 +180,7 @@ self.handleFavKeyPress = (ev) => {
 }
 
 /**
- * Create restaurant HTML.
+ * Create restaurant HTML
  */
 self.createRestaurantHTML = (restaurant) => {
 
@@ -176,24 +194,19 @@ self.createRestaurantHTML = (restaurant) => {
   const picture = document.createElement('picture');
   picture.className = 'restaurant-img';
   picture.classList.add('empty-picture');
-  li.append(picture);
 
   const name = document.createElement('h3');
   name.innerHTML = restaurant.name;
-  li.append(name);
 
   const neighborhood = document.createElement('p');
   neighborhood.innerHTML = restaurant.neighborhood;
-  li.append(neighborhood);
 
   const address = document.createElement('p');
   address.innerHTML = restaurant.address;
-  li.append(address);
 
   const more = document.createElement('a');
   more.innerHTML = 'View Details';
   more.href = DBHelper.urlForRestaurant(restaurant);
-  li.append(more);
 
   const favCheck = document.createElement('span');
   favCheck.id = `fav${restaurant.id}`;
@@ -204,7 +217,17 @@ self.createRestaurantHTML = (restaurant) => {
   favCheck.title = restaurant.is_favorite ? 'Unset as favorite' : 'Set as favorite';;
   favCheck.onclick = self.toggleFavorite;
   favCheck.onkeypress = self.handleFavKeyPress;
-  li.append(favCheck);
+
+  // Place objects on main element
+  li.append(picture);
+  const headContainer = document.createElement('div');
+  headContainer.className = 'head-container';
+  headContainer.append(name);
+  headContainer.append(favCheck);
+  li.append(headContainer);  
+  li.append(neighborhood);
+  li.append(address);
+  li.append(more);
 
   // Register the element on the IntersectionObserver
   self.io.observe(li);
@@ -397,6 +420,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
   self.fetchNeighborhoods()
     .then(fetchCuisines)
-    .then(updateRestaurants);
+    .then(() => updateRestaurants(false));
 
 });

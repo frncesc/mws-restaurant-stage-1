@@ -157,8 +157,7 @@ span.favorite {
   background-image: url('../icons/favorite-off.svg');
   height: 24px;
   width: 24px;
-  float: right;
-  /* display: inline-block; */
+  display: inline-block;
   vertical-align: middle;
   padding: 0 0 0 0px;
   margin: 1rem;

@@ -84,6 +84,8 @@
 }
 
 #restaurants-list li {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
   background-color: var(--light-paper);
   font-family: Arial, sans-serif;
   text-align: left;
@@ -133,7 +135,7 @@
   text-transform: uppercase;
 }
 
-#restaurants-list .favoriteLb {
-  float: right;
-  margin: 1rem;
+#restaurants-list li .head-container {
+  display: grid;
+  grid-template-columns: 1fr auto;
 }

@@ -109,15 +109,17 @@ class DBHelper {
           // Update restaurant data on IDB
           DBHelper.getRestaurantPromiseFromIDB(data.restaurant_id)
             .then(restaurant => {
-              restaurant.is_favorite = data.favorite;
-              restaurant.updatedAt = Date.now();
-              return DBHelper.saveRestaurantToIdb(restaurant);
+              if (restaurant.is_favorite !== data.favorite) {
+                restaurant.is_favorite = data.favorite;
+                restaurant.updatedAt = Date.now();
+                return DBHelper.saveRestaurantToIdb(restaurant);
+              }
             })
             .catch(err => {
               console.err(`Unable to update the 'favorite' state on the IDB for restaurant #${data.restaurant_id}`);
             });
 
-          // Call the API
+          // Call the Restaurant API
           const url = `${API_HOST}/restaurants/${data.restaurant_id}/?is_favorite=${data.favorite ? 'true' : 'false'}`;
           result = fetch(url, { method: 'PATCH' });
         }
@@ -425,16 +427,17 @@ class DBHelper {
    * @param {string} neighborhood - The requested neighborhood, or `all` for matching all neighborhoods
    * @returns {Promise} - Resolves with an array of objects of type `restaurant`
    */
-  static fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood) {
+  static fetchRestaurantByCuisineNeighborhoodAndFav(cuisine, neighborhood, fav) {
     return DBHelper.fetchRestaurants()
       .then(restaurants => {
         return restaurants ? restaurants.filter(r => {
           return (cuisine === 'all' || r.cuisine_type === cuisine)
-            && (neighborhood === 'all' || r.neighborhood === neighborhood);
+            && (neighborhood === 'all' || r.neighborhood === neighborhood)
+            && (!fav || r.is_favorite);
         }) : [];
       })
       .catch(err => {
-        console.log(`Error fetching restaurant list by cuisine and neighborhood: ${err}`);
+        console.log(`Error fetching restaurant list by cuisine, neighborhood and favorite: ${err}`);
       });
   }
 
