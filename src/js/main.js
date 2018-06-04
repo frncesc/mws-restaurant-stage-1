@@ -153,33 +153,6 @@ self.fillRestaurantsHTML = (restaurants = self.restaurants) => {
 }
 
 /**
- * Toggle the 'favorite' state of a restaurant in response to an action event
- * @param {Event} ev 
- */
-self.toggleFavorite = (ev) => {
-  const chk = ev.target;
-  if (chk && chk.id.length > 3) {
-    const restaurant_id = Number(chk.id.substr(3));
-    let favorite = chk.getAttribute('aria-checked') !== 'true';
-    chk.setAttribute('aria-checked', favorite);
-    chk.title = favorite ? 'Unset as favorite' : 'Set as favorite';
-    restaurants.find(r => r.id === restaurant_id).is_favorite = favorite;
-    DBHelper.performAction('SET_FAVORITE', { restaurant_id, favorite }, self.showSnackBar);
-  }
-}
-
-/**
- * Handles keyboard events triggered by the 'favorite' checkboxes
- * @param {Event} ev 
- */
-self.handleFavKeyPress = (ev) => {
-  if (ev.keyCode === 32 || ev.keyCode === 13) {
-    ev.preventDefault();
-    self.toggleFavorite(ev);
-  }
-}
-
-/**
  * Create restaurant HTML
  */
 self.createRestaurantHTML = (restaurant) => {
@@ -208,15 +181,7 @@ self.createRestaurantHTML = (restaurant) => {
   more.innerHTML = 'View Details';
   more.href = DBHelper.urlForRestaurant(restaurant);
 
-  const favCheck = document.createElement('span');
-  favCheck.id = `fav${restaurant.id}`;
-  favCheck.className = 'favorite'
-  favCheck.setAttribute('role', 'checkbox');
-  favCheck.setAttribute('tabindex', 0);
-  favCheck.setAttribute('aria-checked', restaurant.is_favorite);
-  favCheck.title = restaurant.is_favorite ? 'Unset as favorite' : 'Set as favorite';;
-  favCheck.onclick = self.toggleFavorite;
-  favCheck.onkeypress = self.handleFavKeyPress;
+  const favCheck = DBHelper.buildFavElement(restaurant);
 
   // Place objects on main element
   li.append(picture);

@@ -186,7 +186,7 @@ class DBHelper {
   static performAction(type, data, showSnackbar) {
     return DBHelper.tryAction(type, data)
       .then(json => {
-        console.log(`Action ${type} (${data}) performed!`);
+        console.log(`Action ${type} performed with: ${JSON.stringify(data)}`);
       })
       .catch(err => {
         console.log(`Unable to perform action ${type}! Storing for resuming it later.`);
@@ -557,6 +557,7 @@ class DBHelper {
           return Promise.resolve([]);
 
         // Process all actions and wait for its resolutions
+        // TODO: Check multiple changes of the 'favorite' status on the same restaurant
         return Promise.all(actions.map(act => {
           console.log(`Processing pending action ${act.since} (${act.data.type})`);
           return DBHelper.tryAction(act.data.type, act.data.data)
@@ -588,4 +589,51 @@ class DBHelper {
         console.log(`Fatal error processing pending actions: ${err}`);
       })
   }
+
+  /**
+   * Toggle the 'favorite' state of a restaurant in response to an action event
+   * @param {Event} ev 
+   */
+  static toggleFavorite(ev) {
+    const chk = ev.target;
+    if (chk && chk.id.length > 3) {
+      ev.preventDefault();
+      const restaurant_id = Number(chk.id.substr(3));
+      let favorite = chk.getAttribute('aria-checked') !== 'true';
+      chk.setAttribute('aria-checked', favorite);
+      chk.title = favorite ? 'Unset as favorite' : 'Set as favorite';
+      if (DBHelper._RESTAURANTS)
+        DBHelper._RESTAURANTS.find(r => r.id === restaurant_id).is_favorite = favorite;
+      DBHelper.performAction('SET_FAVORITE', { restaurant_id, favorite }, self.showSnackBar);
+    }
+  }
+
+  /**
+   * Handles keyboard events triggered by the 'favorite' checkboxes
+   * @param {Event} ev 
+   */
+  static handleFavKeyPress(ev) {
+    if (ev.keyCode === 32 || ev.keyCode === 13) {
+      ev.preventDefault();
+      DBHelper.toggleFavorite(ev);
+    }
+  }
+
+  /**
+   * Builds a custom 'favorite' toggle button
+   * @param {Object} restaurant - The restaurant data associated to this button
+   */
+  static buildFavElement(restaurant) {
+    const favCheck = document.createElement('span');
+    favCheck.id = `fav${restaurant.id}`;
+    favCheck.className = 'favorite'
+    favCheck.setAttribute('role', 'checkbox');
+    favCheck.setAttribute('tabindex', 0);
+    favCheck.setAttribute('aria-checked', restaurant.is_favorite);
+    favCheck.title = restaurant.is_favorite ? 'Unset as favorite' : 'Set as favorite';;
+    favCheck.onclick = DBHelper.toggleFavorite;
+    favCheck.onkeypress = DBHelper.handleFavKeyPress;
+    return favCheck;
+  }
+
 }
