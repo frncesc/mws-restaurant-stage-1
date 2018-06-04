@@ -224,7 +224,7 @@ self.createRestaurantHTML = (restaurant) => {
   headContainer.className = 'head-container';
   headContainer.append(name);
   headContainer.append(favCheck);
-  li.append(headContainer);  
+  li.append(headContainer);
   li.append(neighborhood);
   li.append(address);
   li.append(more);
@@ -400,15 +400,18 @@ window.initMap = () => {
  */
 self.snackbar = null;
 self.showSnackBar = (options) => {
+  const snackElement = document.querySelector('.mdc-snackbar');
   if (!self.snackbar)
-    self.snackbar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
+    self.snackbar = new mdc.snackbar.MDCSnackbar(snackElement);
   const DEFAULT_OPTIONS = {
     message: '---',
     actionText: 'DISMISS',
     actionHandler: () => { },
     timeout: 3000
   };
-  snackbar.show(Object.assign(DEFAULT_OPTIONS, options));
+  // Avoid re-entrant calls to 'show'
+  if (snackElement.getAttribute('aria-hidden') === 'true')
+    self.snackbar.show(Object.assign({}, DEFAULT_OPTIONS, options));
 };
 
 /**
@@ -420,6 +423,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
   self.fetchNeighborhoods()
     .then(fetchCuisines)
-    .then(() => updateRestaurants(false));
+    .then(() => {
+      updateRestaurants(false);
+      DBHelper.flushPendingActions(self.showSnackBar);
+    });
 
 });

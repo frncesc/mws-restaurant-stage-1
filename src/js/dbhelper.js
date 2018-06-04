@@ -116,7 +116,7 @@ class DBHelper {
               }
             })
             .catch(err => {
-              console.err(`Unable to update the 'favorite' state on the IDB for restaurant #${data.restaurant_id}`);
+              console.log(`Unable to update the 'favorite' state on the IDB for restaurant #${data.restaurant_id}`);
             });
 
           // Call the Restaurant API
@@ -190,19 +190,21 @@ class DBHelper {
       })
       .catch(err => {
         console.log(`Unable to perform action ${type}! Storing for resuming it later.`);
-        DBHelper.getIdb().then(db => {
-          const tx = db.transaction(DBHelper.IDB_PENDING_ACTIONS, 'readwrite');
-          tx.objectStore(DBHelper.IDB_PENDING_ACTIONS).put({
-            since: Date.now(),
-            data: { type, data }
-          });
-          return tx.complete;
-        }).then(() => {
-          showSnackbar({ message: 'Unable to update data at this moment. Will try again later.' });
-        }).catch(err => {
-          console.err(`Error storing pending transaction on IDB: ${err}`);
-          showSnackbar({ message: 'Your request cannot be processed now. Please try again later.' })
-        })
+        DBHelper.getIdb()
+          .then(db => {
+            const tx = db.transaction(DBHelper.IDB_PENDING_ACTIONS, 'readwrite');
+            tx.objectStore(DBHelper.IDB_PENDING_ACTIONS).put({
+              since: Date.now(),
+              data: { type, data }
+            });
+            DBHelper._NO_PENDING_ACTIONS = false;
+            return tx.complete;
+          }).then(() => {
+            showSnackbar({ message: 'Could not connect to server. We will try it later.', multiline: true });
+          }).catch(err => {
+            console.log(`Error storing pending transaction on IDB: ${err}`);
+            showSnackbar({ message: 'The change could not be registered. Please try it later.', multiline: true })
+          })
       })
   }
 
@@ -510,5 +512,80 @@ class DBHelper {
       return marker;
     }
     return null;
+  }
+
+  /**
+   * Removes a record from the pending actions table on the IDB
+   * @param {Number} id - The pending action ID (currently a timestamp)
+   * @returns {Promise} - Returns the transaction `complete` promise
+   */
+  static removePendingActionFromIDB(id) {
+    return DBHelper.getIdb()
+      .then(db => {
+        const tx = db.transaction(DBHelper.IDB_PENDING_ACTIONS, 'readwrite');
+        tx.objectStore(DBHelper.IDB_PENDING_ACTIONS).delete(id);
+        return tx.complete;
+      })
+  }
+
+  /**
+   * Checks for pending actions on the IDB. For each one found, 
+   * performs the associated action and cleans its IDB registry.
+   * The static property `DBHelper._NO_PENDING_ACTIONS` (initially undefined)
+   * acts as a flag, avoiding unnecessary checks.
+   * @param {*} showSnackbar - The function used to display a snackbar with a short message
+   * @param {*} interval - Interval at which this function is called. Default is 20"
+   */
+  static flushPendingActions(showSnackbar, interval = 20000) {
+
+    if (DBHelper._NO_PENDING_ACTIONS) {
+      // Just prepare for next round
+      window.setTimeout(() => DBHelper.flushPendingActions(showSnackbar), interval);
+      return;
+    }
+
+    DBHelper.getIdb()
+      .then(db => {
+        // Read all pending actions from IDB
+        return db.transaction(DBHelper.IDB_PENDING_ACTIONS)
+          .objectStore(DBHelper.IDB_PENDING_ACTIONS)
+          .getAll();
+      })
+      .then(actions => {
+        // No pending actions? Then just set the flag and return an empty array.
+        if (!actions)
+          return Promise.resolve([]);
+
+        // Process all actions and wait for its resolutions
+        return Promise.all(actions.map(act => {
+          console.log(`Processing pending action ${act.since} (${act.data.type})`);
+          return DBHelper.tryAction(act.data.type, act.data.data)
+            .then(result => {
+              // Action was successfull, so remove it from IDB
+              return DBHelper.removePendingActionFromIDB(act.since)
+                .then(() => {
+                  console.log(`Pending action ${act.since} (${act.data.type}) removed from IDB`);
+                  return true;
+                });
+            })
+            .catch(err => {
+              console.log(`Error perfoming pending action ${act.since} (${act.data.type}): ${err}`);
+              return false;
+            })
+        }));
+      })
+      .then(result => {
+        if (result.includes(false))
+          // At least one of the pending actions has failed, so we can't set the flag on.
+          showSnackbar({ message: 'Could not synchronize all pending actions. Will try it later.', multiline: true });
+        else
+          DBHelper._NO_PENDING_ACTIONS = true;
+        // Prepare for next round
+        window.setTimeout(() => DBHelper.flushPendingActions(showSnackbar), interval);
+      })
+      .catch(err => {
+        // Should not occur!
+        console.log(`Fatal error processing pending actions: ${err}`);
+      })
   }
 }
