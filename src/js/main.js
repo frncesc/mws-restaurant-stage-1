@@ -181,7 +181,7 @@ self.createRestaurantHTML = (restaurant) => {
   more.innerHTML = 'View Details';
   more.href = DBHelper.urlForRestaurant(restaurant);
 
-  const favCheck = DBHelper.buildFavElement(restaurant);
+  const favCheck = Utils.buildFavElement(restaurant);
 
   // Place objects on main element
   li.append(picture);
@@ -360,26 +360,6 @@ window.initMap = () => {
 }
 
 /**
- * Show the snackbar with the provided options
- * @see: https://material.io/develop/web/components/snackbars/
- */
-self.snackbar = null;
-self.showSnackBar = (options) => {
-  const snackElement = document.querySelector('.mdc-snackbar');
-  if (!self.snackbar)
-    self.snackbar = new mdc.snackbar.MDCSnackbar(snackElement);
-  const DEFAULT_OPTIONS = {
-    message: '---',
-    actionText: 'DISMISS',
-    actionHandler: () => { },
-    timeout: 3000
-  };
-  // Avoid re-entrant calls to 'show'
-  if (snackElement.getAttribute('aria-hidden') === 'true')
-    self.snackbar.show(Object.assign({}, DEFAULT_OPTIONS, options));
-};
-
-/**
  * Set listeners, fetch neighborhoods and cuisines and update restaurants as soon as the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', (event) => {
@@ -390,7 +370,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     .then(fetchCuisines)
     .then(() => {
       updateRestaurants(false);
-      DBHelper.flushPendingActions(self.showSnackBar);
+      DBHelper.flushPendingActions();
     });
 
 });
