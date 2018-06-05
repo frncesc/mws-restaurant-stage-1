@@ -136,7 +136,7 @@
   text-transform: uppercase;
 }
 
-#restaurants-list li .head-container {
+#restaurants-list li .restaurant-name-container {
   display: grid;
   grid-template-columns: 1fr auto;
 }

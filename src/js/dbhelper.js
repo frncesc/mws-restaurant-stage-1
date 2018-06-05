@@ -102,17 +102,24 @@ class DBHelper {
   static tryAction(type, data) {
 
     let result = null;
+    let restaurant = null;
+    if (DBHelper._RESTAURANTS && data && data.restaurant_id)
+      restaurant = DBHelper._RESTAURANTS.find(r => r.id === data.restaurant_id);
 
     switch (type) {
       case 'SET_FAVORITE':
         if (data && data.restaurant_id) {
-          // Update restaurant data on IDB
+          // Update current restaurant data in memory
+          if (restaurant)
+            restaurant.is_favorite = data.favorite;
+
+          // Update data on IDB
           DBHelper.getRestaurantPromiseFromIDB(data.restaurant_id)
-            .then(restaurant => {
-              if (restaurant.is_favorite !== data.favorite) {
-                restaurant.is_favorite = data.favorite;
-                restaurant.updatedAt = Date.now();
-                return DBHelper.saveRestaurantToIdb(restaurant);
+            .then(rest => {
+              if (rest.is_favorite !== data.favorite) {
+                rest.is_favorite = data.favorite;
+                rest.updatedAt = Date.now();
+                return DBHelper.saveRestaurantToIdb(rest);
               }
             })
             .catch(err => {

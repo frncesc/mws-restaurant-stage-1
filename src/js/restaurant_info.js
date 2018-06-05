@@ -95,6 +95,9 @@ self.fillRestaurantHTML = (restaurant = self.restaurant) => {
   picImage.sizes = 'calc(100vw - 2rem)';
   picImage.src = `pictures/${fileName}-800px.${extension}`;
 
+  const favCheck = Utils.buildFavElement(restaurant);
+  document.getElementById('restaurant-name-container').append(favCheck);
+
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = restaurant.cuisine_type;
 

@@ -55,9 +55,7 @@ class Utils {
       let favorite = chk.getAttribute('aria-checked') !== 'true';
       chk.setAttribute('aria-checked', favorite);
       chk.title = favorite ? 'Unset as favorite' : 'Set as favorite';
-      if (DBHelper._RESTAURANTS)
-        DBHelper._RESTAURANTS.find(r => r.id === restaurant_id).is_favorite = favorite;
-      DBHelper.performAction('SET_FAVORITE', { restaurant_id, favorite }, self.showSnackBar);
+      DBHelper.performAction('SET_FAVORITE', { restaurant_id, favorite });
     }
   }
 
@@ -68,7 +66,7 @@ class Utils {
   static handleFavKeyPress(ev) {
     if (ev.keyCode === 32 || ev.keyCode === 13) {
       ev.preventDefault();
-      DBHelper.toggleFavorite(ev);
+      Utils.toggleFavorite(ev);
     }
   }
 

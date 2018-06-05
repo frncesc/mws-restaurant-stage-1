@@ -161,9 +161,9 @@ span.favorite {
   vertical-align: middle;
   padding: 0 0 0 0px;
   margin: 1rem;
+  align-self: end;
 }
 
 span.favorite[aria-checked=true] {
   background-image: url('../icons/favorite-on.svg');
 }
-

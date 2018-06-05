@@ -5,11 +5,11 @@
   <title>Restaurant Info</title>
   <!-- See https://goo.gl/OOhYW5 -->
   <link rel="manifest" href="manifest.json">
-  
+
   <link rel="icon" href="logo/icon-16x16.png">
 
   <!-- Material Design Components -->
-  <link rel="stylesheet" href="css/mdc.snackbar.css" type="text/css">  
+  <link rel="stylesheet" href="css/mdc.snackbar.css" type="text/css">
   <!-- Common styles -->
   <link rel="stylesheet" href="css/common-styles.css" type="text/css">
   <!-- Styles specific to this page -->
@@ -47,7 +47,10 @@
     <!-- End map -->
     <!-- Beginning restaurant -->
     <section id="restaurant-container">
-      <h2 id="restaurant-name" aria-label="Restaurant name"></h2>
+      <div id="restaurant-name-container">
+        <h2 id="restaurant-name" aria-label="Restaurant name"></h2>
+        <!-- Favorite icon (generated at run-time) -->
+      </div>
       <!-- img id="restaurant-img" alt="" -->
       <picture id="restaurant-picture" class="restaurant-img">
         <source id="source-webp" srcset="" type="image/webp">
@@ -84,7 +87,7 @@
     </div>
   </div>
   <!-- End snackbar -->
-  
+
   <!-- Beginning scripts -->
   <!-- build:dist-restaurant -->
   <!-- Material Design Components -->

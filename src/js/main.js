@@ -186,7 +186,7 @@ self.createRestaurantHTML = (restaurant) => {
   // Place objects on main element
   li.append(picture);
   const headContainer = document.createElement('div');
-  headContainer.className = 'head-container';
+  headContainer.className = 'restaurant-name-container';
   headContainer.append(name);
   headContainer.append(favCheck);
   li.append(headContainer);
