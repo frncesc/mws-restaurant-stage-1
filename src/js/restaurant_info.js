@@ -148,6 +148,10 @@ self.fillReviewsHTML = (reviews = self.restaurant.reviews) => {
   reviews.forEach(review => {
     container.appendChild(createReviewHTML(review));
   });
+
+  const addReviewBtn = document.createElement('button');
+  addReviewBtn.innerHTML = 'Add review';
+  container.appendChild(addReviewBtn);  
 }
 
 /**
@@ -180,6 +184,14 @@ self.createReviewHTML = (review) => {
   const comments = document.createElement('p');
   comments.innerHTML = review.comments;
   article.appendChild(comments);
+
+  const editBtn = document.createElement('button');
+  editBtn.innerHTML = 'Edit';
+  article.appendChild(editBtn);
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.innerHTML = 'Delete';
+  article.appendChild(deleteBtn);
 
   return article;
 }

@@ -169,6 +169,11 @@ span.favorite {
   font-size: 12pt;
 }
 
+#reviews-container button {
+  margin: 0 0 1em 1em;
+  font-size: 12pt;
+}
+
 @media screen and (max-width: 374px) {
   .inside main {
     padding-top: calc(3.6rem + 20pt);
