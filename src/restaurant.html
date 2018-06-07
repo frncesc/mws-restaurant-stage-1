@@ -63,10 +63,31 @@
     </section>
     <!-- end restaurant -->
     <!-- Beginning reviews -->
-    <section id="reviews-container">
+    <section id="reviews-container" class="box-container">
       <h3 id="reviews-title"></h3>
     </section>
     <!-- End reviews -->
+    <!-- Add/Edit review form -->
+    <section class="box-container">
+      <article id="review-form" class="hidden">
+        <header>
+          <div class="review-form-title">Add review</div>
+        </header>
+        <form>
+          <label for="name">Your name: </label>
+          <input type="text" id="name" />
+          <label for="rating">Rating: </label>
+          <input type="range" id="rating" min="0" max="5" step="1" />
+          <label for="comments">Comments:</label>
+          <textarea id="comments" cols="80" rows="5"></textarea>
+        </form>
+        <button id="form-ok">Send review</button>
+        <button id="form-cancel">Cancel</button>
+      </article>
+      <button id="add-review">Write a review</button>
+    </section>
+
+    <!-- End add/edit review form -->
   </main>
   <!-- End main -->
 

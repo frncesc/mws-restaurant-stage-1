@@ -12,6 +12,10 @@ if ('serviceWorker' in navigator) {
  */
 let restaurant = null;
 let mapObject = null;
+let reviewForm = null;
+let addReviewBtn = null;
+let formOkBtn = null;
+let formCancelBtn = null;
 
 /**
  * Initialize Google map, called from HTML.
@@ -149,9 +153,6 @@ self.fillReviewsHTML = (reviews = self.restaurant.reviews) => {
     container.appendChild(createReviewHTML(review));
   });
 
-  const addReviewBtn = document.createElement('button');
-  addReviewBtn.innerHTML = 'Add review';
-  container.appendChild(addReviewBtn);  
 }
 
 /**
@@ -223,14 +224,32 @@ self.getParameterByName = (name, url) => {
   return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
 
+self.showReviewForm = () => {
+  self.reviewForm.classList.remove('hidden');
+  self.addReviewBtn.classList.add('hidden');
+}
+
+self.hideReviewForm = () => {
+  self.reviewForm.classList.add('hidden');
+  self.addReviewBtn.classList.remove('hidden');
+}
+
 /**
  * Update restaurant data as soon as the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', (event) => {
+
+  self.reviewForm = document.querySelector('#review-form');
+  self.addReviewBtn = document.querySelector('#add-review');
+  self.addReviewBtn.addEventListener('click', self.showReviewForm);
+  self.formOkBtn = document.querySelector('#form-ok');
+  self.formCancelBtn = document.querySelector('#form-cancel');
+  self.formCancelBtn.addEventListener('click', self.hideReviewForm);
+
   self.fetchRestaurantFromURL()
     .then(restaurant => {
       // Check if Maps API is already loaded
       if (window.google && window.google.maps)
-        self.initMap()
+        self.initMap();
     });
 });

@@ -103,7 +103,7 @@ span.favorite {
   border-radius: 0.5rem;
 }
 
-#restaurant-container, #reviews-container {
+#restaurant-container, .box-container {
   max-width: 40rem;
   margin: auto;
   padding: 1rem;
@@ -116,7 +116,7 @@ span.favorite {
 
 /* ====================== Restaurant Reviews ====================== */
 
-#reviews-container h3 {
+.box-container h3 {
   color: var(--accent);
   font-size: 24pt;
   font-weight: 300;
@@ -124,7 +124,7 @@ span.favorite {
   padding-bottom: 1pt;
 }
 
-#reviews-container article {
+.box-container article {
   font-size: 12pt;
   background-color: var(--light-paper);
   border: 2px solid var(--gray-paper);
@@ -133,7 +133,7 @@ span.favorite {
   margin: 0 0 2em;
 }
 
-#reviews-container article header {
+.box-container article header {
   background-color: var(--ink);
   border-top-left-radius: 24px;
   padding: 0.8rem;
@@ -141,7 +141,7 @@ span.favorite {
   grid-template-columns: 1fr 1fr;
 }
 
-.review-author {
+.review-author, .review-form-title {
   color: var(--paper);
   font-size: 16pt;
   align-self: center;
@@ -164,12 +164,12 @@ span.favorite {
   margin: 1em;
 }
 
-#reviews-container article p {
+.box-container article p, .box-container article form {
   margin: 1em;
   font-size: 12pt;
 }
 
-#reviews-container button {
+.box-container button {
   margin: 0 0 1em 1em;
   font-size: 12pt;
 }
