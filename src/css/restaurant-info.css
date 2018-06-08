@@ -164,9 +164,29 @@ span.favorite {
   margin: 1em;
 }
 
-.box-container article p, .box-container article form {
+.box-container {
+  width: 100%;
+}
+
+.box-container article p {
   margin: 1em;
   font-size: 12pt;
+}
+
+.box-container form {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-gap: 1em;
+  margin: 1em;
+  font-size: 12pt;
+}
+
+.box-container .wide {
+  grid-column: 1 / 3;
+}
+
+.box-container textarea {
+  width: 100%;
 }
 
 .box-container button {

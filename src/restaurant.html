@@ -77,9 +77,21 @@
           <label for="name">Your name: </label>
           <input type="text" id="name" />
           <label for="rating">Rating: </label>
-          <input type="range" id="rating" min="0" max="5" step="1" />
-          <label for="comments">Comments:</label>
-          <textarea id="comments" cols="80" rows="5"></textarea>
+          <div>
+            <select id="rating">
+              <option value="0">-- not rated --</option>
+              <option value="1">&starf;</option>
+              <option value="2">&starf;&starf;</option>
+              <option value="3">&starf;&starf;&starf;</option>
+              <option value="4">&starf;&starf;&starf;&starf;</option>
+              <option value="5">&starf;&starf;&starf;&starf;&starf;</option>
+            </select>
+            <!-- input type="range" id="rating" min="0" max="5" step="1" onchange="updateRangeLb" / -->
+          </div>
+          <div class="wide">
+            <label for="comments">Comments:</label>
+            <textarea id="comments" rows="5"></textarea>
+          </div>
         </form>
         <button id="form-ok">Send review</button>
         <button id="form-cancel">Cancel</button>
