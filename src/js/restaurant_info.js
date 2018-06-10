@@ -16,6 +16,7 @@ let reviewForm = null;
 let addReviewBtn = null;
 let formOkBtn = null;
 let formCancelBtn = null;
+let editingReview = null;
 
 /**
  * Initialize Google map, called from HTML.
@@ -60,14 +61,14 @@ self.fetchRestaurantFromURL = () => {
   else {
     // `id` must be a number
     return DBHelper.fetchRestaurantById(parseInt(id))
-      .then(restaurant => {
-        if (!restaurant)
+      .then(rest => {
+        if (!rest)
           return Promise.reject(`Unknown restaurant "${id}"`);
 
-        self.restaurant = restaurant;
+        self.restaurant = rest;
         self.fillRestaurantHTML();
         self.fillBreadcrumb();
-        return restaurant;
+        return rest;
       });
   }
 }
@@ -137,20 +138,24 @@ self.fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours
  * Create all reviews HTML and add them to the webpage.
  */
 self.fillReviewsHTML = (reviews = self.restaurant.reviews) => {
-  const container = document.getElementById('reviews-container');
+  const container = document.getElementById('reviews');
+
+  // Remove existing elements (useful when editing reviews)
+  while (container.firstChild)
+    container.removeChild(container.firstChild);
 
   const title = document.getElementById('reviews-title');
   title.innerHTML = 'Reviews';
 
-  if (!reviews) {
+  if (!reviews || reviews.length === 0) {
     const noReviews = document.createElement('p');
     noReviews.innerHTML = 'No reviews yet!';
     container.appendChild(noReviews);
     return;
   }
 
-  reviews.forEach(review => {
-    container.appendChild(createReviewHTML(review));
+  reviews.forEach((review, pos) => {
+    container.appendChild(createReviewHTML(review, pos));
   });
 
 }
@@ -158,8 +163,9 @@ self.fillReviewsHTML = (reviews = self.restaurant.reviews) => {
 /**
  * Create review HTML and add it to the webpage.
  */
-self.createReviewHTML = (review) => {
+self.createReviewHTML = (review, pos) => {
   const article = document.createElement('article');
+  article.dataset.review = pos;
   const header = document.createElement('header');
 
   const name = document.createElement('div');
@@ -183,15 +189,17 @@ self.createReviewHTML = (review) => {
   article.appendChild(rating);
 
   const comments = document.createElement('p');
-  comments.innerHTML = review.comments;
+  comments.innerHTML = review.comments.replace(/\n/g, '<br>');
   article.appendChild(comments);
 
   const editBtn = document.createElement('button');
   editBtn.innerHTML = 'Edit';
+  editBtn.addEventListener('click', self.editReview);
   article.appendChild(editBtn);
 
   const deleteBtn = document.createElement('button');
   deleteBtn.innerHTML = 'Delete';
+  deleteBtn.addEventListener('click', self.deleteReview);
   article.appendChild(deleteBtn);
 
   return article;
@@ -206,7 +214,7 @@ self.fillBreadcrumb = (restaurant = self.restaurant) => {
   const li = document.createElement('li');
   li.innerHTML = restaurant.name;
   breadcrumb.appendChild(li);
-}
+};
 
 /**
  * Get a parameter by name from page URL.
@@ -222,27 +230,122 @@ self.getParameterByName = (name, url) => {
   if (!results[2])
     return '';
   return decodeURIComponent(results[2].replace(/\+/g, ' '));
-}
+};
+
+self.clearReviewForm = () => {
+  self.reviewFormTitle.innerHTML = `Post a review about ${self.restaurant.name}`;
+  self.editName.value = '';
+  self.editRating.value = 0;
+  self.editComments.value = '';
+};
 
 self.showReviewForm = () => {
-  self.reviewForm.classList.remove('hidden');
+  self.self.clearReviewForm();
+  self.reviewFormArticle.classList.remove('hidden');
   self.addReviewBtn.classList.add('hidden');
-}
+};
 
 self.hideReviewForm = () => {
-  self.reviewForm.classList.add('hidden');
+  self.reviewFormArticle.classList.add('hidden');
   self.addReviewBtn.classList.remove('hidden');
+  if (self.editingReview) {
+    self.addReviewBtn.insertAdjacentElement('beforebegin', self.reviewFormArticle);
+    self.editingReview.classList.remove('hidden');
+    self.editingReview = null;
+  }
+};
+
+self.reviewFormOk = (ev) => {
+  const data = {
+    restaurant_id: self.restaurant.id,
+    name: self.editName.value,
+    rating: self.editRating.value,
+    comments: self.editComments.value,
+    updatedAt: Date.now(),
+  }
+
+  if (self.editingReview) {
+    const reviewNum = self.editingReview.dataset.review;
+    const review = self.restaurant.reviews[reviewNum];
+    data.id = review.id;
+  } else {
+    data.createdAt = data.updatedAt;
+  }
+
+  DBHelper.performAction(self.editingReview ? 'EDIT_REVIEW' : 'ADD_REVIEW', data)
+    .then(result => {
+      console.log(`Action performed!`);
+      console.log(result);
+      // Save returned id
+      if (typeof result.id !== 'undefined')
+        data.id = result.id;
+      // Rebuild reviews list
+      self.fillReviewsHTML();
+    })
+    .catch(err => {
+      console.log(`Error: ${err}`);
+    });
+
+  self.hideReviewForm();
+};
+
+self.editReview = (ev) => {
+  const reviewArticle = ev.target.parentElement;
+  const reviewNum = reviewArticle.dataset.review;
+  const review = self.restaurant.reviews[reviewNum];
+  if (review) {
+    self.editingReview = reviewArticle;
+    const reviewDateTxt = new Date(review.updatedAt).toLocaleDateString();
+
+    self.reviewFormTitle.innerHTML = `Edit review posted on ${reviewDateTxt} by ${review.name}`;
+    self.editName.value = review.name;
+    self.editRating.value = review.rating;
+    self.editComments.value = review.comments;
+
+    // Hide review article and place form at its location
+    reviewArticle.classList.add('hidden');
+    reviewArticle.insertAdjacentElement('afterend', self.reviewFormArticle);
+    self.reviewFormArticle.classList.remove('hidden');
+  }
+  else
+    console.log(`Error: Review #${reviewId} not found!`);
 }
+
+self.deleteReview = (ev) => {
+  const reviewArticle = ev.target.parentElement;
+  const reviewNum = reviewArticle.dataset.review;
+  const review = self.restaurant.reviews[reviewNum];
+  if (review && review.id) {
+    const reviewDateTxt = new Date(review.updatedAt).toLocaleDateString();
+    if (window.confirm(`Do you really want to delete the review about ${self.restaurant.name} posted on ${reviewDateTxt} by ${review.name}?`)) {
+      DBHelper.performAction('DELETE_REVIEW', review)
+        .then(result => {
+          console.log(`Review #${review.id} deleted!`);
+          self.fillReviewsHTML();
+        })
+        .catch(err => {
+          console.log(`Error deleting review: ${err}`);
+        });
+    }
+  }
+  else
+    console.log(`Error: review #${reviewNum} not found!`);
+};
 
 /**
  * Update restaurant data as soon as the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', (event) => {
 
-  self.reviewForm = document.querySelector('#review-form');
+  self.reviewFormArticle = document.querySelector('#review-form-article');
+  self.reviewFormTitle = self.reviewFormArticle.querySelector('#review-form-title');
+  self.editName = self.reviewFormArticle.querySelector('#edit-name');
+  self.editRating = self.reviewFormArticle.querySelector('#edit-rating');
+  self.editComments = self.reviewFormArticle.querySelector('#edit-comments');
   self.addReviewBtn = document.querySelector('#add-review');
   self.addReviewBtn.addEventListener('click', self.showReviewForm);
   self.formOkBtn = document.querySelector('#form-ok');
+  self.formOkBtn.addEventListener('click', self.reviewFormOk);
   self.formCancelBtn = document.querySelector('#form-cancel');
   self.formCancelBtn.addEventListener('click', self.hideReviewForm);
 

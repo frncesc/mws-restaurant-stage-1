@@ -101,41 +101,53 @@ class DBHelper {
    */
   static tryAction(type, data) {
 
+    if (!data || !data.restaurant_id)
+      return Promise.reject('Bad data!')
+
     let result = null;
+    let idbPromise = null;
+
     let restaurant = null;
-    if (DBHelper._RESTAURANTS && data && data.restaurant_id)
+    if (DBHelper._RESTAURANTS && data.restaurant_id)
       restaurant = DBHelper._RESTAURANTS.find(r => r.id === data.restaurant_id);
 
     switch (type) {
       case 'SET_FAVORITE':
-        if (data && data.restaurant_id) {
-          // Update current restaurant data in memory
-          if (restaurant)
-            restaurant.is_favorite = data.favorite;
+        // Update current restaurant data in memory
+        if (restaurant)
+          restaurant.is_favorite = data.favorite;
 
-          // Update data on IDB
-          DBHelper.getRestaurantPromiseFromIDB(data.restaurant_id)
-            .then(rest => {
-              if (rest.is_favorite !== data.favorite) {
-                rest.is_favorite = data.favorite;
-                rest.updatedAt = Date.now();
-                return DBHelper.saveRestaurantToIdb(rest);
-              }
-            })
-            .catch(err => {
-              console.log(`Unable to update the 'favorite' state on the IDB for restaurant #${data.restaurant_id}`);
-            });
+        // Update data on IDB
+        idbPromise = DBHelper.getRestaurantPromiseFromIDB(data.restaurant_id)
+          .then(rest => {
+            rest.is_favorite = data.favorite;
+            rest.updatedAt = Date.now();
+            return DBHelper.saveRestaurantToIdb(rest);
+          });
 
-          // Call the Restaurant API
-          const url = `${API_HOST}/restaurants/${data.restaurant_id}/?is_favorite=${data.favorite ? 'true' : 'false'}`;
-          result = fetch(url, { method: 'PATCH' });
-        }
+        // Call the Restaurant API
+        result = fetch(
+          `${API_HOST}/restaurants/${data.restaurant_id}/?is_favorite=${data.favorite ? 'true' : 'false'}`,
+          { method: 'PATCH' });
         break;
 
       case 'ADD_REVIEW':
-        if (data && data.restaurant_id) {
-          const url = `${API_HOST}/reviews/`;
-          result = fetch(url, {
+        // Update current restaurant data in memory
+        if (restaurant)
+          restaurant.reviews.push(data);
+
+        // Update data on IDB
+        idbPromise = DBHelper.getRestaurantPromiseFromIDB(data.restaurant_id)
+          .then(rest => {
+            rest.reviews = rest.reviews || [];
+            rest.reviews.push(data);
+            //rest.updatedAt = Date.now();
+            return DBHelper.saveRestaurantToIdb(rest);
+          })
+
+        // Call the Restaurant API
+        result = fetch(
+          `${API_HOST}/reviews/`, {
             method: 'POST',
             body: JSON.stringify({
               restaurant_id: data.restaurant_id,
@@ -144,42 +156,95 @@ class DBHelper {
               comments: data.comments || '',
             })
           });
-        }
         break;
 
       case 'EDIT_REVIEW':
-        if (data && data.review_id) {
-          const url = `${API_HOST}/reviews/${data.review_id}`;
-          result = fetch(url, {
-            method: 'PATCH',
-            body: JSON.stringify({
-              name: data.name || 'Unknown user',
-              rating: data.rating || 0,
-              comments: data.comments || '',
-            })
-          });
+        if (data.id) {
+          // Update current restaurant data in memory
+          if (restaurant) {
+            const n = restaurant.reviews.findIndex(rv => rv.id === data.id);
+            if (n >= 0)
+              restaurant.reviews[n] = data;
+          }
+
+          // Update data on IDB
+          idbPromise = DBHelper.getRestaurantPromiseFromIDB(data.restaurant_id)
+            .then(rest => {
+              rest.reviews = rest.reviews || [];
+              const n = rest.reviews.findIndex(rv => rv.id === data.id);
+              if (n >= 0) {
+                rest.reviews[n] = data;
+                //rest.updatedAt = Date.now();
+                return DBHelper.saveRestaurantToIdb(rest);
+              } else
+                throw new Error(`Review #${data.id} not found in restaurant #${data.restaurant_id} on IDB`);
+            });
+
+          // Call the Restaurant API
+          result = fetch(
+            `${API_HOST}/reviews/${data.id}`, {
+              method: 'PATCH',
+              body: JSON.stringify({
+                name: data.name || 'Unknown user',
+                rating: data.rating || 0,
+                comments: data.comments || '',
+              })
+            });
         }
         break;
 
       case 'DELETE_REVIEW':
-        if (data && data.review_id) {
-          const url = `${API_HOST}/reviews/${data.review_id}`;
-          result = fetch(url, { method: 'DELETE' });
+        if (data.id) {
+          // Update current restaurant data in memory
+          if (restaurant) {
+            const n = restaurant.reviews.findIndex(rv => rv.id === data.id);
+            if (n >= 0)
+              restaurant.reviews.splice(n, 1);
+          }
+
+          // Update data on IDB
+          idbPromise = DBHelper.getRestaurantPromiseFromIDB(data.restaurant_id)
+            .then(rest => {
+              rest.reviews = rest.reviews || [];
+              const n = rest.reviews.findIndex(rv => rv.id === data.id);
+              if (n >= 0) {
+                rest.reviews.splice(n, 1);
+                //rest.updatedAt = Date.now();
+                return DBHelper.saveRestaurantToIdb(rest);
+              } else
+                throw new Error(`Review #${data.id} not found in restaurant #${data.restaurant_id} on IDB`);
+            });
+
+          // Call the Restaurant API
+          result = fetch(
+            `${API_HOST}/reviews/${data.id}`,
+            { method: 'DELETE' });
         }
         break;
 
       default:
+        // Unknown action!
         break;
     }
+
+    if (idbPromise)
+      idbPromise
+        .then(result => {
+          console.log('Data updated on IDB');
+        })
+        .catch(err => {
+          console.log(`Error updating data on IDB: ${err}`);
+        })
 
     if (result)
       return result.then(response => {
         if (response.ok)
           return response.json();
-        throw new Error('Bad network response');
-      });
-
-    return Promise.reject(`Unknown action: ${type} (${JSON.stringify(data || {})})`);
+        else
+          throw new Error('Bad network response');
+      })
+    else
+      return Promise.reject(`Dad data or unknown action: ${type} (${JSON.stringify(data || {})})`);
   }
 
   /**
@@ -193,6 +258,7 @@ class DBHelper {
     return DBHelper.tryAction(type, data)
       .then(json => {
         console.log(`Action ${type} performed with: ${JSON.stringify(data)}`);
+        return json;
       })
       .catch(err => {
         console.log(`Unable to perform action ${type}! Storing for resuming it later.`);
@@ -208,8 +274,8 @@ class DBHelper {
           }).then(() => {
             Utils.showSnackBar('Can not connect to the server at this time. It will be retried later.');
           }).catch(err => {
-            console.log(`Error storing pending transaction on IDB: ${err}`);
-            Utils.showSnackBar('The change could not be registered. Please try it again.');
+            console.log(`Error storing pending transaction on the IDB: ${err}`);
+            Utils.showSnackBar('Unknown error! Please try again later');
           })
       })
   }

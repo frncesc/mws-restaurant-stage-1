@@ -107,7 +107,6 @@ span.favorite {
   max-width: 40rem;
   margin: auto;
   padding: 1rem;
-  border-bottom: 1px solid var(--shadow);
 }
 
 #restaurant-hours td {
@@ -141,10 +140,17 @@ span.favorite {
   grid-template-columns: 1fr 1fr;
 }
 
-.review-author, .review-form-title {
+.review-author {
   color: var(--paper);
   font-size: 16pt;
   align-self: center;
+}
+
+#review-form-title {
+  color: var(--paper);
+  font-size: 16pt;
+  align-self: center;
+  grid-column-end: span 2;
 }
 
 .review-date {

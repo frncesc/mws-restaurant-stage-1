@@ -65,20 +65,21 @@
     <!-- Beginning reviews -->
     <section id="reviews-container" class="box-container">
       <h3 id="reviews-title"></h3>
+      <div id="reviews"></div>
     </section>
     <!-- End reviews -->
     <!-- Add/Edit review form -->
     <section class="box-container">
-      <article id="review-form" class="hidden">
+      <article id="review-form-article" class="hidden">
         <header>
-          <div class="review-form-title">Add review</div>
+          <div id="review-form-title">Add review</div>
         </header>
-        <form>
-          <label for="name">Your name: </label>
-          <input type="text" id="name" />
-          <label for="rating">Rating: </label>
+        <form id="review-form">
+          <label for="edit-name">Your name: </label>
+          <input type="text" id="edit-name" />
+          <label for="edit-rating">Rating: </label>
           <div>
-            <select id="rating">
+            <select id="edit-rating">
               <option value="0">-- not rated --</option>
               <option value="1">&starf;</option>
               <option value="2">&starf;&starf;</option>
@@ -89,14 +90,14 @@
             <!-- input type="range" id="rating" min="0" max="5" step="1" onchange="updateRangeLb" / -->
           </div>
           <div class="wide">
-            <label for="comments">Comments:</label>
-            <textarea id="comments" rows="5"></textarea>
+            <label for="edit-comments">Comments:</label>
+            <textarea id="edit-comments" rows="5"></textarea>
           </div>
         </form>
-        <button id="form-ok">Send review</button>
+        <button id="form-ok">Post review</button>
         <button id="form-cancel">Cancel</button>
       </article>
-      <button id="add-review">Write a review</button>
+      <button id="add-review">Post a new review</button>
     </section>
 
     <!-- End add/edit review form -->
