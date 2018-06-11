@@ -49,9 +49,8 @@
     <section id="restaurant-container">
       <div id="restaurant-name-container">
         <h2 id="restaurant-name" aria-label="Restaurant name"></h2>
-        <!-- Favorite icon (generated at run-time) -->
+        <!-- Favorite icon will be placed here (generated at run-time) -->
       </div>
-      <!-- img id="restaurant-img" alt="" -->
       <picture id="restaurant-picture" class="restaurant-img">
         <source id="source-webp" srcset="" type="image/webp">
         <source id="source-jpeg" srcset="" type="image/jpeg">
@@ -65,11 +64,9 @@
     <!-- Beginning reviews -->
     <section id="reviews-container" class="box-container">
       <h3 id="reviews-title"></h3>
+      <!-- Reviews will be placed here: -->
       <div id="reviews"></div>
-    </section>
-    <!-- End reviews -->
-    <!-- Add/Edit review form -->
-    <section class="box-container">
+      <!-- Review form -->
       <article id="review-form-article" class="hidden">
         <header>
           <div id="review-form-title">Add review</div>
@@ -87,7 +84,6 @@
               <option value="4">&starf;&starf;&starf;&starf;</option>
               <option value="5">&starf;&starf;&starf;&starf;&starf;</option>
             </select>
-            <!-- input type="range" id="rating" min="0" max="5" step="1" onchange="updateRangeLb" / -->
           </div>
           <div class="wide">
             <label for="edit-comments">Comments:</label>
@@ -99,8 +95,7 @@
       </article>
       <button id="add-review">Post a new review</button>
     </section>
-
-    <!-- End add/edit review form -->
+    <!-- End reviews -->
   </main>
   <!-- End main -->
 

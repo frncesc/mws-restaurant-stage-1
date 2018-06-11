@@ -284,6 +284,7 @@ self.reviewFormOk = (ev) => {
     })
     .catch(err => {
       console.log(`Error: ${err}`);
+      self.fillReviewsHTML();
     });
 
   self.hideReviewForm();
@@ -325,6 +326,7 @@ self.deleteReview = (ev) => {
         })
         .catch(err => {
           console.log(`Error deleting review: ${err}`);
+          self.fillReviewsHTML();
         });
     }
   }
@@ -354,5 +356,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
       // Check if Maps API is already loaded
       if (window.google && window.google.maps)
         self.initMap();
+      // Start flushing cron
+      DBHelper.flushPendingActions();
     });
 });

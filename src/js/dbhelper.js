@@ -94,19 +94,17 @@ class DBHelper {
   }
 
   /**
-   * Try to make an API transaction that modifies stored data.
+   * Try to register on the IDB transactions that modify stored data.
    * @param {string} type - Type of action. Valid values are: 'SET_FAVORITE', 'ADD_REVIEW', 'EDIT_REVIEW' and 'DELETE_REVIEW'
    * @param {any} data - The specific data associated with the requested action
    * @returns {Promise} - Resolves with the object received as a response when the transaction is satisfactory. Rejects otherwise.
    */
-  static tryAction(type, data) {
+  static tryActionPrev(type, data) {
 
     if (!data || !data.restaurant_id)
-      return Promise.reject('Bad data!')
+      return Promise.reject('Bad data!');
 
-    let result = null;
     let idbPromise = null;
-
     let restaurant = null;
     if (DBHelper._RESTAURANTS && data.restaurant_id)
       restaurant = DBHelper._RESTAURANTS.find(r => r.id === data.restaurant_id);
@@ -124,11 +122,6 @@ class DBHelper {
             rest.updatedAt = Date.now();
             return DBHelper.saveRestaurantToIdb(rest);
           });
-
-        // Call the Restaurant API
-        result = fetch(
-          `${API_HOST}/restaurants/${data.restaurant_id}/?is_favorite=${data.favorite ? 'true' : 'false'}`,
-          { method: 'PATCH' });
         break;
 
       case 'ADD_REVIEW':
@@ -143,18 +136,6 @@ class DBHelper {
             rest.reviews.push(data);
             //rest.updatedAt = Date.now();
             return DBHelper.saveRestaurantToIdb(rest);
-          })
-
-        // Call the Restaurant API
-        result = fetch(
-          `${API_HOST}/reviews/`, {
-            method: 'POST',
-            body: JSON.stringify({
-              restaurant_id: data.restaurant_id,
-              name: data.name || 'Unknown user',
-              rating: data.rating || 0,
-              comments: data.comments || '',
-            })
           });
         break;
 
@@ -178,17 +159,6 @@ class DBHelper {
                 return DBHelper.saveRestaurantToIdb(rest);
               } else
                 throw new Error(`Review #${data.id} not found in restaurant #${data.restaurant_id} on IDB`);
-            });
-
-          // Call the Restaurant API
-          result = fetch(
-            `${API_HOST}/reviews/${data.id}`, {
-              method: 'PATCH',
-              body: JSON.stringify({
-                name: data.name || 'Unknown user',
-                rating: data.rating || 0,
-                comments: data.comments || '',
-              })
             });
         }
         break;
@@ -214,11 +184,6 @@ class DBHelper {
               } else
                 throw new Error(`Review #${data.id} not found in restaurant #${data.restaurant_id} on IDB`);
             });
-
-          // Call the Restaurant API
-          result = fetch(
-            `${API_HOST}/reviews/${data.id}`,
-            { method: 'DELETE' });
         }
         break;
 
@@ -227,24 +192,80 @@ class DBHelper {
         break;
     }
 
-    if (idbPromise)
-      idbPromise
-        .then(result => {
-          console.log('Data updated on IDB');
-        })
-        .catch(err => {
-          console.log(`Error updating data on IDB: ${err}`);
-        })
+    return idbPromise || Promise.reject(`Bad data or unknown action: ${type} (${JSON.stringify(data || {})})`);
+  }
+
+  /**
+   * Try to make an API transaction that modifies stored data.
+   * @param {string} type - Type of action. Valid values are: 'SET_FAVORITE', 'ADD_REVIEW', 'EDIT_REVIEW' and 'DELETE_REVIEW'
+   * @param {any} data - The specific data associated with the requested action
+   * @param {boolean} allowClientErrors - When `true` response status on the range 4xx will be treated as valid.
+   * This is useful for skipping tasks staled in `pendig_actions` because related items had been deleted.
+   * @returns {Promise} - Resolves with the object received as a response when the transaction is satisfactory. Rejects otherwise.
+   */
+  static tryAction(type, data, allowClientErrors = false) {
+
+    if (!data || !data.restaurant_id)
+      return Promise.reject('Bad data!');
+
+    let result = null;
+
+    switch (type) {
+      case 'SET_FAVORITE':
+        result = fetch(
+          `${API_HOST}/restaurants/${data.restaurant_id}/?is_favorite=${data.favorite ? 'true' : 'false'}`,
+          { method: 'PATCH' });
+        break;
+
+      case 'ADD_REVIEW':
+        result = fetch(
+          `${API_HOST}/reviews/`, {
+            method: 'POST',
+            body: JSON.stringify({
+              restaurant_id: data.restaurant_id,
+              name: data.name || 'Unknown user',
+              rating: data.rating || 0,
+              comments: data.comments || '',
+            })
+          });
+        break;
+
+      case 'EDIT_REVIEW':
+        if (data.id)
+          result = fetch(
+            `${API_HOST}/reviews/${data.id}`, {
+              method: 'PATCH',
+              body: JSON.stringify({
+                name: data.name || 'Unknown user',
+                rating: data.rating || 0,
+                comments: data.comments || '',
+              })
+            });
+        break;
+
+      case 'DELETE_REVIEW':
+        if (data.id)
+          result = fetch(
+            `${API_HOST}/reviews/${data.id}`,
+            { method: 'DELETE' });
+        break;
+
+      default:
+        // Unknown action!
+        break;
+    }
 
     if (result)
       return result.then(response => {
-        if (response.ok)
+        // TODO: Check `ok` and `status` compatibility with Safari and Android browsers!
+        // See compatibility table in: https://developer.mozilla.org/en-US/docs/Web/API/Response
+        if (response.ok || allowClientError && response.status >= 400 && response.status < 500)
           return response.json();
         else
-          throw new Error('Bad network response');
+          throw new Error(`Server responded with error code: ${response.status} (${response.statusText})`);
       })
     else
-      return Promise.reject(`Dad data or unknown action: ${type} (${JSON.stringify(data || {})})`);
+      return Promise.reject(`Bad data or unknown action: ${type} (${JSON.stringify(data || {})})`);
   }
 
   /**
@@ -255,6 +276,17 @@ class DBHelper {
    * @returns {Promise} - Resolves with the object received as a response when the transaction is satisfactory. Rejects otherwise.
    */
   static performAction(type, data) {
+
+    // Register action on the IDB
+    DBHelper.tryActionPrev(type, data)
+      .then(() => {
+        console.log(`Data successfully updated on the IDB!`);
+      })
+      .catch(err => {
+        console.log(`Unable to update data on the IDB!\n${type} ${JSON.stringify(data)} throws: ${err}`);
+      });
+
+    // Try to fetch the API server and put it on _pending_actions_ when failed
     return DBHelper.tryAction(type, data)
       .then(json => {
         console.log(`Action ${type} performed with: ${JSON.stringify(data)}`);
@@ -631,9 +663,9 @@ class DBHelper {
         // TODO: Check multiple changes of the 'favorite' status on the same restaurant
         return Promise.all(actions.map(act => {
           console.log(`Processing pending action ${act.since} (${act.data.type})`);
-          return DBHelper.tryAction(act.data.type, act.data.data)
+          return DBHelper.tryAction(act.data.type, act.data.data, true)
             .then(result => {
-              // Action was successfull, so remove it from IDB
+              // Action was successfull (or responded with a 4xxx status code), so remove it from IDB
               return DBHelper.removePendingActionFromIDB(act.since)
                 .then(() => {
                   console.log(`Pending action ${act.since} (${act.data.type}) removed from IDB`);
