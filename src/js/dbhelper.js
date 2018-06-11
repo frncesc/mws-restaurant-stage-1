@@ -94,12 +94,12 @@ class DBHelper {
   }
 
   /**
-   * Try to register on the IDB transactions that modify stored data.
+   * Register user actions on the IDB and on the current DBHelper._RESTAURANTS variable.
    * @param {string} type - Type of action. Valid values are: 'SET_FAVORITE', 'ADD_REVIEW', 'EDIT_REVIEW' and 'DELETE_REVIEW'
    * @param {any} data - The specific data associated with the requested action
    * @returns {Promise} - Resolves with the object received as a response when the transaction is satisfactory. Rejects otherwise.
    */
-  static tryActionPrev(type, data) {
+  static registerAction(type, data) {
 
     if (!data || !data.restaurant_id)
       return Promise.reject('Bad data!');
@@ -125,6 +125,10 @@ class DBHelper {
         break;
 
       case 'ADD_REVIEW':
+        // Set timestamp as a provisional review ID (the real one will be assigned by the API server)
+        if (!data.id)
+          data.id = Date.now();
+
         // Update current restaurant data in memory
         if (restaurant)
           restaurant.reviews.push(data);
@@ -196,14 +200,14 @@ class DBHelper {
   }
 
   /**
-   * Try to make an API transaction that modifies stored data.
+   * Try to fetch a transaction on the API server.
    * @param {string} type - Type of action. Valid values are: 'SET_FAVORITE', 'ADD_REVIEW', 'EDIT_REVIEW' and 'DELETE_REVIEW'
    * @param {any} data - The specific data associated with the requested action
    * @param {boolean} allowClientErrors - When `true` response status on the range 4xx will be treated as valid.
    * This is useful for skipping tasks staled in `pendig_actions` because related items had been deleted.
    * @returns {Promise} - Resolves with the object received as a response when the transaction is satisfactory. Rejects otherwise.
    */
-  static tryAction(type, data, allowClientErrors = false) {
+  static fetchAction(type, data, allowClientErrors = false) {
 
     if (!data || !data.restaurant_id)
       return Promise.reject('Bad data!');
@@ -260,17 +264,28 @@ class DBHelper {
         // TODO: Check `ok` and `status` compatibility with Safari and Android browsers!
         // See compatibility table in: https://developer.mozilla.org/en-US/docs/Web/API/Response
         if (response.ok || allowClientError && response.status >= 400 && response.status < 500)
-          return response.json();
-        else
-          throw new Error(`Server responded with error code: ${response.status} (${response.statusText})`);
+          return response.json()
+            .then(result => {
+              if (type === 'ADD_REVIEW') {
+                // Set the real review id
+                // TODO: Save dictionary!!
+                data.id = result.id;
+              }
+              return result;
+            });
+        else {
+          const err = new Error(`Server responded with the error code: ${response.status} (${response.statusText})`);
+          err.RETRY = true;
+          throw err;
+        }
       })
     else
       return Promise.reject(`Bad data or unknown action: ${type} (${JSON.stringify(data || {})})`);
   }
 
   /**
-   * Try to make a transaction that modifies stored data. If a network error occurs, the transaction is saved
-   * on IDB to resume work later.
+   * Try to perform an user-requested action. If a network error occurs, the transaction is saved
+   * on the IDB to be resumed later.
    * @param {string} type - Type of action. Valid values are: 'SET_FAVORITE', 'ADD_REVIEW', 'EDIT_REVIEW' and 'DELETE_REVIEW'
    * @param {any} data - The specific data associated with the requested action
    * @returns {Promise} - Resolves with the object received as a response when the transaction is satisfactory. Rejects otherwise.
@@ -278,7 +293,7 @@ class DBHelper {
   static performAction(type, data) {
 
     // Register action on the IDB
-    DBHelper.tryActionPrev(type, data)
+    DBHelper.registerAction(type, data)
       .then(() => {
         console.log(`Data successfully updated on the IDB!`);
       })
@@ -287,29 +302,33 @@ class DBHelper {
       });
 
     // Try to fetch the API server and put it on _pending_actions_ when failed
-    return DBHelper.tryAction(type, data)
+    return DBHelper.fetchAction(type, data)
       .then(json => {
         console.log(`Action ${type} performed with: ${JSON.stringify(data)}`);
         return json;
       })
       .catch(err => {
-        console.log(`Unable to perform action ${type}! Storing for resuming it later.`);
-        DBHelper.getIdb()
-          .then(db => {
-            const tx = db.transaction(DBHelper.IDB_PENDING_ACTIONS, 'readwrite');
-            tx.objectStore(DBHelper.IDB_PENDING_ACTIONS).put({
-              since: Date.now(),
-              data: { type, data }
+        if (err.RETRY) {
+          console.log(`Unable to perform action ${type}! Storing for resuming it later.`);
+          DBHelper.getIdb()
+            .then(db => {
+              const tx = db.transaction(DBHelper.IDB_PENDING_ACTIONS, 'readwrite');
+              tx.objectStore(DBHelper.IDB_PENDING_ACTIONS).put({
+                since: Date.now(),
+                data: { type, data }
+              });
+              DBHelper._NO_PENDING_ACTIONS = false;
+              return tx.complete;
+            }).then(() => {
+              Utils.showSnackBar('Can not connect to the server at this time. It will be retried later.');
+            }).catch(err => {
+              console.log(`Error storing pending transaction on the IDB: ${err}`);
+              Utils.showSnackBar('Unknown error! Please try again later');
             });
-            DBHelper._NO_PENDING_ACTIONS = false;
-            return tx.complete;
-          }).then(() => {
-            Utils.showSnackBar('Can not connect to the server at this time. It will be retried later.');
-          }).catch(err => {
-            console.log(`Error storing pending transaction on the IDB: ${err}`);
-            Utils.showSnackBar('Unknown error! Please try again later');
-          })
-      })
+        } else {
+          console.log(err);
+        }
+      });
   }
 
   /**
@@ -322,7 +341,7 @@ class DBHelper {
       return db.transaction(DBHelper.IDB_STORE)
         .objectStore(DBHelper.IDB_STORE)
         .get(id)
-        .then(record => record ? record.data : null);
+        .then(record => record && record.data ? record.data : null);
     });
   }
 
@@ -461,7 +480,8 @@ class DBHelper {
       const restaurant = DBHelper._RESTAURANTS.find(restaurant => restaurant.id === id);
       if (restaurant)
         return Promise.resolve(restaurant);
-    }
+    } else
+      DBHelper._RESTAURANTS = [];
 
     const fetchRestaurant = fetch(`${DBHelper.API_RESTAURANTS_ENDPOINT}/${id}`)
       .then(response => {
@@ -479,7 +499,6 @@ class DBHelper {
 
     return Promise.all([fetchRestaurant, fetchReviews])
       .then(results => {
-        DBHelper._RESTAURANTS = DBHelper._RESTAURANTS || [];
         const restaurant = results[0];
         restaurant.reviews = results[1] || []; // Reviews is the second value in 'results'
         DBHelper._RESTAURANTS.push(restaurant);
@@ -490,6 +509,10 @@ class DBHelper {
       .catch(err => {
         // Maybe we are off-line? Try to get data from IDB
         return DBHelper.getRestaurantPromiseFromIDB(id)
+          .then(restaurant => {
+            DBHelper._RESTAURANTS.push(restaurant);
+            return restaurant;
+          })
           .catch(idbErr => {
             console.log(`Error requesting restaurant data with ID "${id}": ${err}`);
             throw new Error(idbErr);
@@ -663,7 +686,7 @@ class DBHelper {
         // TODO: Check multiple changes of the 'favorite' status on the same restaurant
         return Promise.all(actions.map(act => {
           console.log(`Processing pending action ${act.since} (${act.data.type})`);
-          return DBHelper.tryAction(act.data.type, act.data.data, true)
+          return DBHelper.fetchAction(act.data.type, act.data.data, true)
             .then(result => {
               // Action was successfull (or responded with a 4xxx status code), so remove it from IDB
               return DBHelper.removePendingActionFromIDB(act.since)

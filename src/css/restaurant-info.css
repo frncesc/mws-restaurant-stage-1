@@ -104,8 +104,6 @@ span.favorite {
 }
 
 #restaurant-container, .box-container {
-  max-width: 40rem;
-  margin: auto;
   padding: 1rem;
 }
 
