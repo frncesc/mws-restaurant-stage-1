@@ -70,6 +70,58 @@ class DBHelper {
   }
 
   /**
+   * Current array of restaurants data, retrieved from the API server or from IDB
+   * @type {Array}
+   */
+  static get RESTAURANTS() {
+    if (!DBHelper._RESTAURANTS)
+      DBHelper._RESTAURANTS = [];
+    return DBHelper._RESTAURANTS;
+  }
+
+  static set RESTAURANTS(restaurants) {
+    DBHelper._RESTAURANTS = restaurants;
+  }
+
+  /**
+   * Finds a restaurant with a specific ID on the current array of restaurants data
+   * @param {Number} id - The requested restaurant id
+   */
+  static GET_RESTAURANT(id) {
+    return DBHelper.RESTAURANTS.find(r => r.id === id);
+  }
+
+  /**
+   * Message displayed by the snack bar when offline and with user actions
+   * pending to be synchronized
+   * @type {string}
+   */
+  static get WAIT_MESSAGE() {
+    return 'Can\'t contact the server now. Will retry later';
+  }
+
+  /**
+ * Message displayed by the snack bar all pending actions have been synchronized
+ * @type {string}
+ */
+  static get OK_SYNC_MESSAGE() {
+    return 'Success! You are now synchronized with the server.';
+  }
+
+  /**
+   * This static member stores a dictionary that links provisional review IDs, assigned at run-time
+   * when we working off-line, with the real review ID assigned by the server API. This is needed to
+   * synchronize pending operations related to reviews (create, edit, delete...) that don't have a
+   * real "id" assigned.
+   * @type {Object}
+   */
+  static get REV_ID_DICT() {
+    if (!DBHelper._REV_ID_DICT)
+      DBHelper._REV_ID_DICT = {};
+    return DBHelper._REV_ID_DICT;
+  }
+
+  /**
    * Opens the main IndexedDB controller
    * @returns {Promise} - Resolves with a [DB](https://www.npmjs.com/package/idb#db) object
    */
@@ -94,20 +146,20 @@ class DBHelper {
   }
 
   /**
-   * Register user actions on the IDB and on the current DBHelper._RESTAURANTS variable.
+   * Register user actions on the IDB and on the current DBHelper.RESTAURANTS variable.
    * @param {string} type - Type of action. Valid values are: 'SET_FAVORITE', 'ADD_REVIEW', 'EDIT_REVIEW' and 'DELETE_REVIEW'
    * @param {any} data - The specific data associated with the requested action
    * @returns {Promise} - Resolves with the object received as a response when the transaction is satisfactory. Rejects otherwise.
    */
-  static registerAction(type, data) {
+  static registerUserAction(type, data) {
 
     if (!data || !data.restaurant_id)
       return Promise.reject('Bad data!');
 
     let idbPromise = null;
     let restaurant = null;
-    if (DBHelper._RESTAURANTS && data.restaurant_id)
-      restaurant = DBHelper._RESTAURANTS.find(r => r.id === data.restaurant_id);
+    if (data.restaurant_id)
+      restaurant = DBHelper.RESTAURANTS.find(r => r.id === data.restaurant_id);
 
     switch (type) {
       case 'SET_FAVORITE':
@@ -207,7 +259,7 @@ class DBHelper {
    * This is useful for skipping tasks staled in `pendig_actions` because related items had been deleted.
    * @returns {Promise} - Resolves with the object received as a response when the transaction is satisfactory. Rejects otherwise.
    */
-  static fetchAction(type, data, allowClientErrors = false) {
+  static fetchUserAction(type, data, allowClientErrors = false) {
 
     if (!data || !data.restaurant_id)
       return Promise.reject('Bad data!');
@@ -260,25 +312,27 @@ class DBHelper {
     }
 
     if (result)
-      return result.then(response => {
-        // TODO: Check `ok` and `status` compatibility with Safari and Android browsers!
-        // See compatibility table in: https://developer.mozilla.org/en-US/docs/Web/API/Response
-        if (response.ok || allowClientError && response.status >= 400 && response.status < 500)
-          return response.json()
-            .then(result => {
-              if (type === 'ADD_REVIEW') {
-                // Set the real review id
-                // TODO: Save dictionary!!
-                data.id = result.id;
-              }
-              return result;
-            });
-        else {
-          const err = new Error(`Server responded with the error code: ${response.status} (${response.statusText})`);
-          err.RETRY = true;
-          throw err;
-        }
-      })
+      return result
+        .then(response => {
+          // TODO: Check `ok` and `status` compatibility with Safari and Android browsers!
+          // See compatibility table in: https://developer.mozilla.org/en-US/docs/Web/API/Response
+          if (response.ok) {
+            return response.json()
+              .then(result => {
+                if (type === 'ADD_REVIEW') {
+                  // Save the returned review ID on the dictionary
+                  DBHelper.REV_ID_DICT[data.id] = result.id;
+                  // Update current data
+                  data.id = result.id;
+                }
+                return result;
+              });
+          }
+          else if (allowClientErrors && response.status >= 400 && response.status < 500)
+            return true;
+          else
+            throw new Error(`Server responded with the error code: ${response.status} (${response.statusText})`);
+        })
     else
       return Promise.reject(`Bad data or unknown action: ${type} (${JSON.stringify(data || {})})`);
   }
@@ -293,7 +347,7 @@ class DBHelper {
   static performAction(type, data) {
 
     // Register action on the IDB
-    DBHelper.registerAction(type, data)
+    DBHelper.registerUserAction(type, data)
       .then(() => {
         console.log(`Data successfully updated on the IDB!`);
       })
@@ -302,32 +356,28 @@ class DBHelper {
       });
 
     // Try to fetch the API server and put it on _pending_actions_ when failed
-    return DBHelper.fetchAction(type, data)
+    return DBHelper.fetchUserAction(type, data)
       .then(json => {
         console.log(`Action ${type} performed with: ${JSON.stringify(data)}`);
         return json;
       })
       .catch(err => {
-        if (err.RETRY) {
-          console.log(`Unable to perform action ${type}! Storing for resuming it later.`);
-          DBHelper.getIdb()
-            .then(db => {
-              const tx = db.transaction(DBHelper.IDB_PENDING_ACTIONS, 'readwrite');
-              tx.objectStore(DBHelper.IDB_PENDING_ACTIONS).put({
-                since: Date.now(),
-                data: { type, data }
-              });
-              DBHelper._NO_PENDING_ACTIONS = false;
-              return tx.complete;
-            }).then(() => {
-              Utils.showSnackBar('Can not connect to the server at this time. It will be retried later.');
-            }).catch(err => {
-              console.log(`Error storing pending transaction on the IDB: ${err}`);
-              Utils.showSnackBar('Unknown error! Please try again later');
+        console.log(`Unable to perform action "${type}" at this time. Let's store it on IDB for later processing.`);
+        DBHelper.getIdb()
+          .then(db => {
+            const tx = db.transaction(DBHelper.IDB_PENDING_ACTIONS, 'readwrite');
+            tx.objectStore(DBHelper.IDB_PENDING_ACTIONS).put({
+              since: Date.now(),
+              data: { type, data }
             });
-        } else {
-          console.log(err);
-        }
+            DBHelper._NO_PENDING_ACTIONS = false;
+            return tx.complete;
+          }).then(() => {
+            Utils.showSnackBar(DBHelper.WAIT_MESSAGE);
+          }).catch(err => {
+            console.log(`Error storing pending transaction on the IDB: ${err}`);
+            Utils.showSnackBar('Unknown error! Please try again later.');
+          });
       });
   }
 
@@ -434,8 +484,9 @@ class DBHelper {
    * @returns {Promise} - Resolves with an array of `restaurant` objects.
    */
   static fetchRestaurants() {
-    if (DBHelper._RESTAURANTS)
-      return Promise.resolve(DBHelper._RESTAURANTS);
+    // Restaurants are already fetched, so return the saved list
+    if (DBHelper.RESTAURANTS.length > 0)
+      return Promise.resolve(DBHelper.RESTAURANTS);
 
     return fetch(DBHelper.API_RESTAURANTS_ENDPOINT)
       .then(response => {
@@ -445,7 +496,7 @@ class DBHelper {
       })
       .then(restaurants => {
         // Save `restaurants` for later use
-        DBHelper._RESTAURANTS = restaurants;
+        DBHelper.RESTAURANTS = restaurants;
         // Store the restaurants list into IDB
         DBHelper.saveAllRestaurantsIfNewer(restaurants)
           .then(() => {
@@ -459,7 +510,7 @@ class DBHelper {
         return DBHelper.getAllRestaurantsPromiseFromIDB()
           .then(restaurants => {
             // Save `restaurants` for later use
-            DBHelper._RESTAURANTS = restaurants;
+            DBHelper.RESTAURANTS = restaurants;
             return restaurants;
           })
           .catch(idbErr => {
@@ -475,13 +526,9 @@ class DBHelper {
    * @returns {Promise} - Resolves with a `restaurant` object, or _null_ if not exists
    */
   static fetchRestaurantById(id) {
-    if (DBHelper._RESTAURANTS) {
-      // Check if the requested restaurant is alredy stored in `_RESTAURANTS`
-      const restaurant = DBHelper._RESTAURANTS.find(restaurant => restaurant.id === id);
-      if (restaurant)
-        return Promise.resolve(restaurant);
-    } else
-      DBHelper._RESTAURANTS = [];
+
+    if (DBHelper.GET_RESTAURANT(id))
+      return Promise.resolve(DBHelper.GET_RESTAURANT(id));
 
     const fetchRestaurant = fetch(`${DBHelper.API_RESTAURANTS_ENDPOINT}/${id}`)
       .then(response => {
@@ -501,7 +548,7 @@ class DBHelper {
       .then(results => {
         const restaurant = results[0];
         restaurant.reviews = results[1] || []; // Reviews is the second value in 'results'
-        DBHelper._RESTAURANTS.push(restaurant);
+        DBHelper.RESTAURANTS.push(restaurant);
         // Save also `restaurant` in IDB
         DBHelper.saveRestaurantIfNewer(restaurant);
         return restaurant;
@@ -510,7 +557,7 @@ class DBHelper {
         // Maybe we are off-line? Try to get data from IDB
         return DBHelper.getRestaurantPromiseFromIDB(id)
           .then(restaurant => {
-            DBHelper._RESTAURANTS.push(restaurant);
+            DBHelper.RESTAURANTS.push(restaurant);
             return restaurant;
           })
           .catch(idbErr => {
@@ -642,6 +689,34 @@ class DBHelper {
   }
 
   /**
+   * Try to process a single pending action
+   * @param {Object} act - Complex object (usually retrieved from IDB) with the properties
+   *                       `since` (used as a index on IDB `pending_actions` table) and
+   *                       `data` (the action data, with the properties `type` and `data`)
+   * @returns {Promise} - A promise resolving to `true` when the pending action is successfully processed, `false` otherwise.
+   */
+  static processPendingAction(act) {
+    console.log(`Processing pending action ${act.since} (${act.data.type})`);
+    // Check if review ID is on the dictionary of already fetched new reviews
+    if (act.data.data.id && DBHelper.REV_ID_DICT[act.data.data.id])
+      act.data.data.id = DBHelper.REV_ID_DICT[act.data.data.id];
+    // Fetch action
+    return DBHelper.fetchUserAction(act.data.type, act.data.data, true)
+      .then(result => {
+        // Action was successfull (or responded with a 4xxx status code), so remove it from IDB
+        return DBHelper.removePendingActionFromIDB(act.since)
+          .then(() => {
+            console.log(`Pending action ${act.since} (${act.data.type}) removed from IDB`);
+            return true;
+          });
+      })
+      .catch(err => {
+        console.log(`Error perfoming pending action ${act.since} (${act.data.type}): ${err}`);
+        return false;
+      })
+  }
+
+  /**
    * Removes a record from the pending actions table on the IDB
    * @param {Number} id - The pending action ID (currently a timestamp)
    * @returns {Promise} - Returns the transaction `complete` promise
@@ -656,13 +731,14 @@ class DBHelper {
   }
 
   /**
-   * Checks for pending actions on the IDB. For each one found, 
-   * performs the associated action and cleans its IDB registry.
+   * Retrieves all pending actions from the IDB and tries to perform it, cleaning the IDB registry when done.
    * The static property `DBHelper._NO_PENDING_ACTIONS` (initially undefined)
    * acts as a flag, avoiding unnecessary checks.
    * @param {*} interval - Interval at which this function is called. Default is 20"
    */
   static flushPendingActions(interval = 20000) {
+
+    let pending = false;
 
     if (DBHelper._NO_PENDING_ACTIONS) {
       // Just prepare for next round
@@ -670,49 +746,46 @@ class DBHelper {
       return;
     }
 
+    // Read all pending actions from the IDB
     DBHelper.getIdb()
       .then(db => {
-        // Read all pending actions from IDB
         return db.transaction(DBHelper.IDB_PENDING_ACTIONS)
           .objectStore(DBHelper.IDB_PENDING_ACTIONS)
           .getAll();
       })
       .then(actions => {
         // No pending actions? Then just set the flag and return an empty array.
-        if (!actions)
-          return Promise.resolve([]);
+        if (!actions || actions.length === 0)
+          return Promise.resolve(true);
 
-        // Process all actions and wait for its resolutions
-        // TODO: Check multiple changes of the 'favorite' status on the same restaurant
-        return Promise.all(actions.map(act => {
-          console.log(`Processing pending action ${act.since} (${act.data.type})`);
-          return DBHelper.fetchAction(act.data.type, act.data.data, true)
-            .then(result => {
-              // Action was successfull (or responded with a 4xxx status code), so remove it from IDB
-              return DBHelper.removePendingActionFromIDB(act.since)
-                .then(() => {
-                  console.log(`Pending action ${act.since} (${act.data.type}) removed from IDB`);
-                  return true;
-                });
-            })
-            .catch(err => {
-              console.log(`Error perfoming pending action ${act.since} (${act.data.type}): ${err}`);
-              return false;
-            })
-        }));
+        pending = true;
+
+        // Start processing pending actions of type "ADD_REVIEW", so REV_ID_DICT is filled with correct equivalences
+        // between 'fake' review ids and real ids provided by the API server.
+        return Promise.all(actions.filter(act => act.data.type === 'ADD_REVIEW').map(act => DBHelper.processPendingAction(act)))
+          .then(results => {
+            if (results.includes(false))
+              throw (new Error('Unable to flush all pending actions at this moment.'));
+            // Process the remaining (edit, delete and set/unset favorite) pending actions 
+            return Promise.all(actions.filter(act => act.data.type !== 'ADD_REVIEW').map(act => DBHelper.processPendingAction(act)))
+              .then(results => {
+                if (results.includes(false))
+                  throw (new Error('Unable to flush all pending actions at this moment.'));
+                return true;
+              })
+          })
       })
-      .then(result => {
-        if (result.includes(false))
-          // At least one of the pending actions has failed, so we can't set the flag on.
-          Utils.showSnackBar('Can not synchronize with the server at this time. It will be retried later.');
-        else
-          DBHelper._NO_PENDING_ACTIONS = true;
-        // Prepare for next round
+      .then(() => {
+        console.log('No pending actions.');
+        DBHelper._NO_PENDING_ACTIONS = true;
+        if (pending)
+          Utils.showSnackBar(DBHelper.OK_SYNC_MESSAGE);
         window.setTimeout(() => DBHelper.flushPendingActions(interval), interval);
       })
       .catch(err => {
-        // Should not occur!
-        console.log(`Fatal error processing pending actions: ${err}`);
-      })
+        console.log(`Error: ${err}`);
+        Utils.showSnackBar(DBHelper.WAIT_MESSAGE);
+        window.setTimeout(() => DBHelper.flushPendingActions(interval), interval);
+      });
   }
 }

@@ -240,7 +240,8 @@ self.clearReviewForm = () => {
 };
 
 self.showReviewForm = () => {
-  self.self.clearReviewForm();
+  self.hideReviewForm();
+  self.clearReviewForm();
   self.reviewFormArticle.classList.remove('hidden');
   self.addReviewBtn.classList.add('hidden');
 };

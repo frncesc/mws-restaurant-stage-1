@@ -144,6 +144,10 @@ span.favorite {
   align-self: center;
 }
 
+#review-form-article header {
+  background-color: var(--accent);
+}
+
 #review-form-title {
   color: var(--paper);
   font-size: 16pt;
@@ -167,12 +171,6 @@ span.favorite {
   text-transform: uppercase;
   margin: 1em;
 }
-
-/*
-.box-container {
-  width: 100%;
-}
-*/
 
 .box-container article p {
   margin: 1em;
