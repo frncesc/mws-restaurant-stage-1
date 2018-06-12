@@ -146,6 +146,49 @@ class DBHelper {
   }
 
   /**
+   * Try to perform an user-requested action. If a network error occurs, the transaction is saved
+   * on the IDB to be resumed later.
+   * @param {string} type - Type of action. Valid values are: 'SET_FAVORITE', 'ADD_REVIEW', 'EDIT_REVIEW' and 'DELETE_REVIEW'
+   * @param {any} data - The specific data associated with the requested action
+   * @returns {Promise} - Resolves with the object received as a response when the transaction is satisfactory. Rejects otherwise.
+   */
+  static performAction(type, data) {
+    // Register action on the IDB
+    DBHelper.registerUserAction(type, data)
+      .then(() => {
+        console.log(`Data successfully updated on the IDB!`);
+      })
+      .catch(err => {
+        console.log(`Unable to update data on the IDB!\n${type} ${JSON.stringify(data)} throws: ${err}`);
+      });
+
+    // Try to fetch the API server and put it on _pending_actions_ when failed
+    return DBHelper.fetchUserAction(type, data)
+      .then(json => {
+        console.log(`Action ${type} performed with: ${JSON.stringify(data)}`);
+        return json;
+      })
+      .catch(err => {
+        console.log(`Unable to perform action "${type}" at this time. Let's store it on IDB for later processing.`);
+        DBHelper.getIdb()
+          .then(db => {
+            const tx = db.transaction(DBHelper.IDB_PENDING_ACTIONS, 'readwrite');
+            tx.objectStore(DBHelper.IDB_PENDING_ACTIONS).put({
+              since: Date.now(),
+              data: { type, data }
+            });
+            DBHelper._NO_PENDING_ACTIONS = false;
+            return tx.complete;
+          }).then(() => {
+            Utils.showSnackBar(DBHelper.WAIT_MESSAGE);
+          }).catch(err => {
+            console.log(`Error storing pending transaction on the IDB: ${err}`);
+            Utils.showSnackBar('Unknown error! Please try again later.');
+          });
+      });
+  }
+
+  /**
    * Register user actions on the IDB and on the current DBHelper.RESTAURANTS variable.
    * @param {string} type - Type of action. Valid values are: 'SET_FAVORITE', 'ADD_REVIEW', 'EDIT_REVIEW' and 'DELETE_REVIEW'
    * @param {any} data - The specific data associated with the requested action
@@ -168,7 +211,7 @@ class DBHelper {
           restaurant.is_favorite = data.favorite;
 
         // Update data on IDB
-        idbPromise = DBHelper.getRestaurantPromiseFromIDB(data.restaurant_id)
+        idbPromise = DBHelper.getRestaurantFromIDB(data.restaurant_id)
           .then(rest => {
             rest.is_favorite = data.favorite;
             rest.updatedAt = Date.now();
@@ -186,7 +229,7 @@ class DBHelper {
           restaurant.reviews.push(data);
 
         // Update data on IDB
-        idbPromise = DBHelper.getRestaurantPromiseFromIDB(data.restaurant_id)
+        idbPromise = DBHelper.getRestaurantFromIDB(data.restaurant_id)
           .then(rest => {
             rest.reviews = rest.reviews || [];
             rest.reviews.push(data);
@@ -205,7 +248,7 @@ class DBHelper {
           }
 
           // Update data on IDB
-          idbPromise = DBHelper.getRestaurantPromiseFromIDB(data.restaurant_id)
+          idbPromise = DBHelper.getRestaurantFromIDB(data.restaurant_id)
             .then(rest => {
               rest.reviews = rest.reviews || [];
               const n = rest.reviews.findIndex(rv => rv.id === data.id);
@@ -229,7 +272,7 @@ class DBHelper {
           }
 
           // Update data on IDB
-          idbPromise = DBHelper.getRestaurantPromiseFromIDB(data.restaurant_id)
+          idbPromise = DBHelper.getRestaurantFromIDB(data.restaurant_id)
             .then(rest => {
               rest.reviews = rest.reviews || [];
               const n = rest.reviews.findIndex(rv => rv.id === data.id);
@@ -338,55 +381,11 @@ class DBHelper {
   }
 
   /**
-   * Try to perform an user-requested action. If a network error occurs, the transaction is saved
-   * on the IDB to be resumed later.
-   * @param {string} type - Type of action. Valid values are: 'SET_FAVORITE', 'ADD_REVIEW', 'EDIT_REVIEW' and 'DELETE_REVIEW'
-   * @param {any} data - The specific data associated with the requested action
-   * @returns {Promise} - Resolves with the object received as a response when the transaction is satisfactory. Rejects otherwise.
-   */
-  static performAction(type, data) {
-
-    // Register action on the IDB
-    DBHelper.registerUserAction(type, data)
-      .then(() => {
-        console.log(`Data successfully updated on the IDB!`);
-      })
-      .catch(err => {
-        console.log(`Unable to update data on the IDB!\n${type} ${JSON.stringify(data)} throws: ${err}`);
-      });
-
-    // Try to fetch the API server and put it on _pending_actions_ when failed
-    return DBHelper.fetchUserAction(type, data)
-      .then(json => {
-        console.log(`Action ${type} performed with: ${JSON.stringify(data)}`);
-        return json;
-      })
-      .catch(err => {
-        console.log(`Unable to perform action "${type}" at this time. Let's store it on IDB for later processing.`);
-        DBHelper.getIdb()
-          .then(db => {
-            const tx = db.transaction(DBHelper.IDB_PENDING_ACTIONS, 'readwrite');
-            tx.objectStore(DBHelper.IDB_PENDING_ACTIONS).put({
-              since: Date.now(),
-              data: { type, data }
-            });
-            DBHelper._NO_PENDING_ACTIONS = false;
-            return tx.complete;
-          }).then(() => {
-            Utils.showSnackBar(DBHelper.WAIT_MESSAGE);
-          }).catch(err => {
-            console.log(`Error storing pending transaction on the IDB: ${err}`);
-            Utils.showSnackBar('Unknown error! Please try again later.');
-          });
-      });
-  }
-
-  /**
    * Gets a restaurant record from the IndexdedDB
    * @param {number} id - The main identifier of the requested restaurant (currently a number)
    * @returns {Promise} - Resolves with an object of type `restaurant` or _null_ if not found.
    */
-  static getRestaurantPromiseFromIDB(id) {
+  static getRestaurantFromIDB(id) {
     return DBHelper.getIdb().then(db => {
       return db.transaction(DBHelper.IDB_STORE)
         .objectStore(DBHelper.IDB_STORE)
@@ -399,7 +398,7 @@ class DBHelper {
    * Gets all restaurants from the IndexdedDB
    * @returns {Promise} - Resolves with an array of objects of type `restaurant`, or _null_ if none found.
    */
-  static getAllRestaurantsPromiseFromIDB() {
+  static getAllRestaurantsFromIDB() {
     return DBHelper.getIdb().then(db => {
       return db.transaction(DBHelper.IDB_STORE)
         .objectStore(DBHelper.IDB_STORE)
@@ -432,7 +431,7 @@ class DBHelper {
    */
   static saveRestaurantIfNewer(restaurant) {
     // TODO: Check possible changes in reviews!
-    return DBHelper.getRestaurantPromiseFromIDB(restaurant.id)
+    return DBHelper.getRestaurantFromIDB(restaurant.id)
       .then(currentData => {
         let update = !currentData;
         if (!update && restaurant) {
@@ -507,7 +506,7 @@ class DBHelper {
       })
       .catch(err => {
         // Maybe we are off-line? Try to get data from IDB
-        return DBHelper.getAllRestaurantsPromiseFromIDB()
+        return DBHelper.getAllRestaurantsFromIDB()
           .then(restaurants => {
             // Save `restaurants` for later use
             DBHelper.RESTAURANTS = restaurants;
@@ -555,7 +554,7 @@ class DBHelper {
       })
       .catch(err => {
         // Maybe we are off-line? Try to get data from IDB
-        return DBHelper.getRestaurantPromiseFromIDB(id)
+        return DBHelper.getRestaurantFromIDB(id)
           .then(restaurant => {
             DBHelper.RESTAURANTS.push(restaurant);
             return restaurant;
@@ -693,7 +692,7 @@ class DBHelper {
    * @param {Object} act - Complex object (usually retrieved from IDB) with the properties
    *                       `since` (used as a index on IDB `pending_actions` table) and
    *                       `data` (the action data, with the properties `type` and `data`)
-   * @returns {Promise} - A promise resolving to `true` when the pending action is successfully processed, `false` otherwise.
+   * @returns {Promise} - Resolves to `true` when the pending action is successfully processed, `false` otherwise.
    */
   static processPendingAction(act) {
     console.log(`Processing pending action ${act.since} (${act.data.type})`);
