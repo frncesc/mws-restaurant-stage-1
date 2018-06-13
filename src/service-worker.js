@@ -16,7 +16,7 @@
 // Names of the two caches used in this version of the service worker.
 // Change to v2, etc. when you update any of the local resources, which will
 // in turn trigger the install event again.
-const PRECACHE = 'restaurant-precache-v17';
+const PRECACHE = 'restaurant-precache-v21';
 const RUNTIME = 'restaurant-runtime';
 
 // A list of local resources we always want to be cached.
@@ -44,6 +44,9 @@ const PRECACHE_ASSETS_DIST = [
   'js/bundle-main.js',
   'js/bundle-restaurant.js'
 ];
+
+// Set the app cache base path (when not deploying at root level)
+const APP_BASE = `${self.location.origin}/`
 
 // The install handler takes care of precaching the resources we always need.
 self.addEventListener('install', event => {
@@ -74,7 +77,7 @@ self.addEventListener('activate', event => {
 // from the network before returning it to the page.
 self.addEventListener('fetch', event => {
   // Catch all, ignoring search query only in own requests
-  if (event.request.url.startsWith(self.location.origin)) {
+  if (event.request.url.startsWith(APP_BASE)) {
     event.respondWith(
       caches.match(event.request, { ignoreSearch: true }).then(cachedResponse => {
         if (cachedResponse) {

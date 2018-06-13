@@ -4,6 +4,7 @@
 
 // Change this to your server protocol, host and port:
 const API_HOST = 'http://localhost:1337'
+//const API_HOST = '/api';
 
 /**
  * Common database helper functions.
