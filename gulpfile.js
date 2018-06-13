@@ -148,7 +148,7 @@ gulp.task('copy:dist', function () {
       }))
       .pipe(inline({
         base: 'src/',
-        css: cleanCSS,
+        css: function () { return cleanCSS({ rebaseTo: 'src' }) },
         disabledTypes: ['svg', 'img', 'js'], // Only inline css files
       }))
       .pipe(gulp.dest('dist')),
