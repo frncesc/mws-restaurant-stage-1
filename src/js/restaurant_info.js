@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Register service worker
+ * Registers the service worker
  */
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js');
@@ -19,7 +19,7 @@ let formCancelBtn = null;
 let editingReview = null;
 
 /**
- * Initialize Google map, called from HTML.
+ * Initializes Google map, called from HTML.
  */
 window.initMap = () => {
 
@@ -47,7 +47,7 @@ window.initMap = () => {
 }
 
 /**
- * Get the current restaurant from page URL.
+ * Gets the current restaurant from page URL.
  * @returns {Promise} - Resolves with an object of type `restaurant`
  */
 self.fetchRestaurantFromURL = () => {
@@ -74,7 +74,7 @@ self.fetchRestaurantFromURL = () => {
 }
 
 /**
- * Create restaurant HTML and add it to the webpage
+ * Creates the restaurant HTML and adds it to the webpage
  */
 self.fillRestaurantHTML = (restaurant = self.restaurant) => {
   const name = document.getElementById('restaurant-name');
@@ -86,7 +86,6 @@ self.fillRestaurantHTML = (restaurant = self.restaurant) => {
   const fullFileNameParts = DBHelper.imageFileForRestaurant(restaurant).split('.');
   const fileName = fullFileNameParts[0];
   const extension = fullFileNameParts[1];
-
 
   // Use a `picture` element with both webp and jpeg sources instead of `img` with single srcset
   const sourceWebp = document.getElementById('source-webp');
@@ -106,16 +105,16 @@ self.fillRestaurantHTML = (restaurant = self.restaurant) => {
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = restaurant.cuisine_type;
 
-  // fill operating hours
+  // fill-in operating hours
   if (restaurant.operating_hours) {
     self.fillRestaurantHoursHTML();
   }
-  // fill reviews
+  // fill-in reviews
   self.fillReviewsHTML();
 }
 
 /**
- * Create restaurant operating hours HTML table and add it to the webpage.
+ * Creates the restaurant operating hours HTML table and adds it to the webpage.
  */
 self.fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => {
   const hours = document.getElementById('restaurant-hours');
@@ -135,7 +134,7 @@ self.fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours
 }
 
 /**
- * Create all reviews HTML and add them to the webpage.
+ * Creates all reviews HTML and adds them to the webpage.
  */
 self.fillReviewsHTML = (reviews = self.restaurant.reviews) => {
   const container = document.getElementById('reviews');
@@ -157,11 +156,10 @@ self.fillReviewsHTML = (reviews = self.restaurant.reviews) => {
   reviews.forEach((review, pos) => {
     container.appendChild(createReviewHTML(review, pos));
   });
-
 }
 
 /**
- * Create review HTML and add it to the webpage.
+ * Creates a single review HTML and adds it to the webpage.
  */
 self.createReviewHTML = (review, pos) => {
   const article = document.createElement('article');
@@ -206,7 +204,7 @@ self.createReviewHTML = (review, pos) => {
 }
 
 /**
- * Add restaurant name to the breadcrumb navigation menu
+ * Adds the restaurant name to the breadcrumb navigation menu
  */
 self.fillBreadcrumb = (restaurant = self.restaurant) => {
   const breadcrumb = document.getElementById('breadcrumb');
@@ -217,7 +215,7 @@ self.fillBreadcrumb = (restaurant = self.restaurant) => {
 };
 
 /**
- * Get a parameter by name from page URL.
+ * Gets a parameter by name from page URL.
  */
 self.getParameterByName = (name, url) => {
   if (!url)
@@ -232,6 +230,9 @@ self.getParameterByName = (name, url) => {
   return decodeURIComponent(results[2].replace(/\+/g, ' '));
 };
 
+/**
+ * Cleans the form used to create and edit reviews
+ */
 self.clearReviewForm = () => {
   self.reviewFormTitle.innerHTML = `Post a review about ${self.restaurant.name}`;
   self.editName.value = '';
@@ -239,6 +240,9 @@ self.clearReviewForm = () => {
   self.editComments.value = '';
 };
 
+/**
+ * Shows the form used to add and edit reviews
+ */
 self.showReviewForm = () => {
   self.hideReviewForm();
   self.clearReviewForm();
@@ -246,6 +250,9 @@ self.showReviewForm = () => {
   self.addReviewBtn.classList.add('hidden');
 };
 
+/**
+ * Hides the form used to add and edit reviews
+ */
 self.hideReviewForm = () => {
   self.reviewFormArticle.classList.add('hidden');
   self.addReviewBtn.classList.remove('hidden');
@@ -256,6 +263,10 @@ self.hideReviewForm = () => {
   }
 };
 
+/**
+ * Handles clicks on the form "OK" button
+ * @param {Event} ev 
+ */
 self.reviewFormOk = (ev) => {
   const data = {
     restaurant_id: self.restaurant.id,
@@ -291,6 +302,10 @@ self.reviewFormOk = (ev) => {
   self.hideReviewForm();
 };
 
+/**
+ * Handles clicks on review "edit" buttons
+ * @param {Event} ev 
+ */
 self.editReview = (ev) => {
   const reviewArticle = ev.target.parentElement;
   const reviewNum = reviewArticle.dataset.review;
@@ -313,6 +328,10 @@ self.editReview = (ev) => {
     console.log(`Error: Review #${reviewId} not found!`);
 }
 
+/**
+ * Handles clicks on review "delete" buttons
+ * @param {Event} ev 
+ */
 self.deleteReview = (ev) => {
   const reviewArticle = ev.target.parentElement;
   const reviewNum = reviewArticle.dataset.review;
@@ -336,10 +355,11 @@ self.deleteReview = (ev) => {
 };
 
 /**
- * Update restaurant data as soon as the page is loaded.
+ * Update the restaurant data as soon as the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', (event) => {
 
+  // Assign variables to the main HTML elements
   self.reviewFormArticle = document.querySelector('#review-form-article');
   self.reviewFormTitle = self.reviewFormArticle.querySelector('#review-form-title');
   self.editName = self.reviewFormArticle.querySelector('#edit-name');

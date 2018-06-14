@@ -9,6 +9,10 @@
  */
 class Utils {
 
+  /**
+   * The "snackbar" object, used to show warning messages
+   * See: https://github.com/material-components/material-components-web/tree/master/packages/mdc-snackbar 
+   */
   static get snackBar() {
     if (typeof Utils._SNACKBAR === 'undefined') {
       Utils._SNACKELEMENT = document.querySelector('.mdc-snackbar');
@@ -17,10 +21,16 @@ class Utils {
     return Utils._SNACKBAR;
   }
 
+  /**
+   * The HTML element associated with the snackbar
+   */
   static get snackBarElement() {
     return Utils._SNACKELEMENT || null;
   }
 
+  /**
+   * Default options for the snackbar
+   */
   static get DEFAULT_SNACK_OPTIONS() {
     return {
       message: '',
