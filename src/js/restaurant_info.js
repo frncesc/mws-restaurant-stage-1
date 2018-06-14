@@ -357,7 +357,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
       // Check if Maps API is already loaded
       if (window.google && window.google.maps)
         self.initMap();
-      // Start flushing cron
-      DBHelper.flushPendingActions();
+      // Set off-line handlers
+      DBHelper.setOfflineEventHandler();
     });
 });

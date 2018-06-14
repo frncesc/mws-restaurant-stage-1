@@ -16,7 +16,7 @@
 // Names of the two caches used in this version of the service worker.
 // Change to v2, etc. when you update any of the local resources, which will
 // in turn trigger the install event again.
-const PRECACHE = 'restaurant-precache-v21';
+const PRECACHE = 'restaurant-precache-v22';
 const RUNTIME = 'restaurant-runtime';
 
 // A list of local resources we always want to be cached.
@@ -33,9 +33,12 @@ const PRECACHE_ASSETS_SRC = [
   'js/restaurant_info.js',
   'js/idb.js',
   'js/intersection-observer.js',
+  'js/mdc.snackbar.js',
+  'js/utils.js',
   'css/common-styles.css',
   'css/main.css',
   'css/restaurant-info.css',
+  'css/mdc.snackbar.css',
   'icons/favorite-on.svg',
   'icons/favorite-off.svg',
 ];
@@ -45,7 +48,7 @@ const PRECACHE_ASSETS_DIST = [
   'js/bundle-restaurant.js'
 ];
 
-// Set the app cache base path (when not deploying at root level)
+// Set the app cache base path (useful when not deploying at root level)
 const APP_BASE = `${self.location.origin}/`
 
 // The install handler takes care of precaching the resources we always need.
@@ -65,9 +68,7 @@ self.addEventListener('activate', event => {
     caches.keys().then(cacheNames => {
       return cacheNames.filter(cacheName => !currentCaches.includes(cacheName));
     }).then(cachesToDelete => {
-      return Promise.all(cachesToDelete.map(cacheToDelete => {
-        return caches.delete(cacheToDelete);
-      }));
+      return Promise.all(cachesToDelete.map(cacheToDelete => caches.delete(cacheToDelete)));
     }).then(() => self.clients.claim())
   );
 });

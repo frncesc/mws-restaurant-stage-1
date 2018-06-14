@@ -296,8 +296,8 @@ self.setStaticMapListeners = () => {
 
       // Base static map has 640 x 480 pixels, so the real 'px' must be adjusted
       const px = x + Math.round((640 - mapContainer.offsetWidth) / 2);
-      // The map container usually has 480px height, so no adjustement is needed
-      const py = y;
+      // The map has 480px height
+      const py = y + Math.round((480 - mapContainer.offsetHeight) / 2);
       // Check if the click has been done over any marker
       const selected = self.restaurants.find(r => {
         // Convert co-ordinates to pixel positions on map:
@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     .then(fetchCuisines)
     .then(() => {
       updateRestaurants(false);
-      DBHelper.flushPendingActions();
+      DBHelper.setOfflineEventHandler();
     });
 
 });

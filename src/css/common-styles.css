@@ -121,6 +121,12 @@ body>header h1 a:focus, a:hover {
   }
 }
 
+@media screen and (max-height: 700px) {
+  #map {
+    height: 380px;
+  }
+}
+
 /* ====================== From normalize.css ====================== */
 
 button, input, optgroup, select, textarea {
