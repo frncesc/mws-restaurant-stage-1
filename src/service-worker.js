@@ -16,7 +16,7 @@
 // Names of the two caches used in this version of the service worker.
 // Change to v2, etc. when you update any of the local resources, which will
 // in turn trigger the install event again.
-const PRECACHE = 'restaurant-precache-v22';
+const PRECACHE = 'restaurant-precache-v23';
 const RUNTIME = 'restaurant-runtime';
 
 // A list of local resources we always want to be cached.
@@ -33,12 +33,12 @@ const PRECACHE_ASSETS_SRC = [
   'js/restaurant_info.js',
   'js/idb.js',
   'js/intersection-observer.js',
-  'js/mdc.snackbar.js',
+  'js/snackbar.js',
   'js/utils.js',
   'css/common-styles.css',
   'css/main.css',
   'css/restaurant-info.css',
-  'css/mdc.snackbar.css',
+  'css/snackbar.css',
   'icons/favorite-on.svg',
   'icons/favorite-off.svg',
 ];

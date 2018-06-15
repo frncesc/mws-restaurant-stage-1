@@ -11,7 +11,7 @@
 
 - Set a __title__ attribute to the `iframe` containing the Google Maps object. This is a [critical WCAG rule](https://dequeuniversity.com/rules/axe/2.2/frame-title?application=lighthouse) not currently respected by Google Maps.
 
-- Use of [Material Design Components](https://material.io/develop/web/) to display the "snack bar".
+- Use of the Npm [Snackbar](https://www.polonel.com/snackbar/) component to alert users about failed/recovered transactions. Many thanks to [Chris Brame](https://www.polonel.com/)!
 
 ### Allow to favorite/unfavorite restaurants and post, edit and delete reviews, also when off-line
 - Place a _Favorite_ toggleable icon in each restaurant card, and in the restaurant page.

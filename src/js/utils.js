@@ -10,49 +10,27 @@
 class Utils {
 
   /**
-   * The "snackbar" object, used to show warning messages
-   * See: https://github.com/material-components/material-components-web/tree/master/packages/mdc-snackbar 
-   * @type {Object}
-   */
-  static get snackBar() {
-    if (typeof Utils._SNACKBAR === 'undefined') {
-      Utils._SNACKELEMENT = document.querySelector('.mdc-snackbar');
-      Utils._SNACKBAR = Utils._SNACKELEMENT ? new mdc.snackbar.MDCSnackbar(Utils._SNACKELEMENT) : null;
-    }
-    return Utils._SNACKBAR;
-  }
-
-  /**
-   * The HTML element associated with the snackbar
-   * @type {HTMLElement}
-   */
-  static get snackBarElement() {
-    return Utils._SNACKELEMENT || null;
-  }
-
-  /**
    * Default options for the snackbar
    * @type {Object}
    */
   static get DEFAULT_SNACK_OPTIONS() {
     return {
-      message: '',
-      multiline: true,
+      text: '',
+      pos: 'bottom-center',
       actionText: 'DISMISS',
-      actionHandler: () => { },
-      timeout: 3000
+      actionTextColor: '#4caf50',
+      backgroundColor: '#323232',
+      duration: 4000,
     };
   }
 
   /**
    * Show the snackbar with the provided options
-   * @see: https://material.io/develop/web/components/snackbars/
-   * @param {string|Object} options - Can be just the message to show or a complex MDCSnackbar options object
+   * @see: https://github.com/polonel/SnackBar
+   * @param {string|Object} options - Can be just the message to show or a complex options object
    */
   static showSnackBar(options) {
-    // Avoid re-entrant calls to 'show' using the 'aria-hidden' attribute as flag indicator
-    if (Utils.snackBar && Utils.snackBarElement && Utils.snackBarElement.getAttribute('aria-hidden') === 'true')
-      Utils.snackBar.show(Object.assign({}, Utils.DEFAULT_SNACK_OPTIONS, typeof options === 'string' ? { message: options } : options));
+    self.Snackbar.show(Object.assign({}, Utils.DEFAULT_SNACK_OPTIONS, typeof options === 'string' ? { text: options } : options));
   }
 
   /**

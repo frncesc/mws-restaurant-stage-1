@@ -2,34 +2,6 @@
 
 #### _Three Stage Course Material Project - Restaurant Reviews_
 
-## Stage 1
-
-The site was dynamically built with the information of `data/restaurants.json` and the photos stored in `/img`.
-
-The navigation pivots between the main page `index.html` and specific information and reviews about each restaurant, presented in `restaurant.html`.
-
-A _Google Maps_ widget is embedded in each page, showing markers with the location of each restaurant.
-
-This project was originally forked from https://github.com/udacity/mws-restaurant-stage-1
-The list of the changes introduced on the original project is detailed in [CHANGELOG.md](https://github.com/frncesc/mws-restaurant-stage-1/blob/master/CHANGELOG.md).
-
-## Stage 2
-
-At this stage, data was pulled from a [Sails.js](https://sailsjs.com/) server instead of the previous _restaurants.json_ file. The [original](https://github.com/udacity/mws-restaurant-stage-2) server had some problems with character encoding, which have been solved in [this fork](https://github.com/frncesc/mws-restaurant-stage-2).
-
-The data retrieved from the server is stored in [Indexed DB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API), so it can be used again also when off-line. Jake Archibald's [IDB](https://github.com/jakearchibald/idb) is used to deal with the database.
-
-A lot of optimizations where performed to achieve the desired performance in [Lighthouse](https://developers.google.com/web/tools/lighthouse/):
-
-- Use a generic image for restaurants that don't have it.
-- Use of [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) objects instead of passing _"error & success callbacks"_ to functions.
-- Added a `manifest.json` file with basic information about the web app.
-- Project workflow was re-designed: original media images where placed in `/media`, source files in `/src` and the production site was finally delivered in `/dist`. A [Gulp](https://gulpjs.com/) script takes care of all the building and debugging operations.
-- Restaurant pictures are delivered in [WebP](https://developers.google.com/speed/webp/) format as well as the original JPEG, so browsers capable of using it can take advantage of its performance improvement. To make this possible, the original `img` was replaced by `picture` elements with two `source` components.
-- An [IntersectionObserver](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API) was used to avoid off-screen pictures, specially in small screens. The real image pictures are set and downloaded only when the restaurant `li` element approaches or intersects the display area.
-- Local scripts have been bundled, babelized and minimized.
-- CSS stylesheets have also been optimized, minified and placed as inline `style` elements on the production site.
-
 ## Stage 3
 
 The web app allows now favorite/unfavorite restaurants and post, edit and delete reviews, also when off-line. To achieve this goal, different changes have been implemented:
@@ -43,7 +15,7 @@ The web app allows now favorite/unfavorite restaurants and post, edit and delete
   - When on-line, calls the API server with the appropiate method and data.
   - When the device is off-line or the call to the API server was unsuccessfull, the requested action data is stored in a special IDB object called `pending_actions`, for later processing.
 - A new method `DBHelper.flushPendingActions` has been implemented to check if there are pending actions registered on the IDB and try to process them when the device is on-line. This method is called at the beggining of each page view, and when an [`online`](https://developer.mozilla.org/en-US/docs/Web/API/NavigatorOnLine/Online_and_offline_events) event is fired. In case of error when contacting the API server, the method is retried after a while (currently 20").
-- A "snack bar" is used to inform the users about the state of pending actions.
+- A "snackbar" is used to inform the users about the state of pending actions.
 
 __IMPORTANT:__ Keep in mind that __user login is not yet implemented__, so all actions are performed by a single, unverified user. This should be avoided in a real service!
 
@@ -59,7 +31,7 @@ More performance and optimizations have been introduced, with special impact on 
 
 - A __title__ attribute has been set to the `iframe` containing the Google Maps object. This is a [critical WCAG rule](https://dequeuniversity.com/rules/axe/2.2/frame-title?application=lighthouse) not currently respected by Google Maps.
 
-- A [Material Design Component](https://material.io/develop/web/) is used to display the "snack bar".
+- The Npm [Snackbar](https://www.polonel.com/snackbar/) component is used to alert users about failed/recovered transactions. Many thanks to [Chris Brame](https://www.polonel.com/)!
 
 - A third drop-down list has been added to the filtering section of `index.html`, allowing to select all restaurants or just "_My favorites_".
 
@@ -115,3 +87,35 @@ $ npm run debug
 ```
 
 The servers are launched by default on ports `8010` (dist) and `8080` (debug), but you can change this settings in `gulpfile.js`
+
+---
+
+## Previous stages
+
+### Stage 1
+
+The site was dynamically built with the information of `data/restaurants.json` and the photos stored in `/img`.
+
+The navigation pivots between the main page `index.html` and specific information and reviews about each restaurant, presented in `restaurant.html`.
+
+A _Google Maps_ widget is embedded in each page, showing markers with the location of each restaurant.
+
+This project was originally forked from https://github.com/udacity/mws-restaurant-stage-1
+The list of the changes introduced on the original project is detailed in [CHANGELOG.md](https://github.com/frncesc/mws-restaurant-stage-1/blob/master/CHANGELOG.md).
+
+### Stage 2
+
+At this stage, data was pulled from a [Sails.js](https://sailsjs.com/) server instead of the previous _restaurants.json_ file. The [original](https://github.com/udacity/mws-restaurant-stage-2) server had some problems with character encoding, which have been solved in [this fork](https://github.com/frncesc/mws-restaurant-stage-2).
+
+The data retrieved from the server is stored in [Indexed DB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API), so it can be used again also when off-line. Jake Archibald's [IDB](https://github.com/jakearchibald/idb) is used to deal with the database.
+
+A lot of optimizations where performed to achieve the desired performance in [Lighthouse](https://developers.google.com/web/tools/lighthouse/):
+
+- Use a generic image for restaurants that don't have it.
+- Use of [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) objects instead of passing _"error & success callbacks"_ to functions.
+- Added a `manifest.json` file with basic information about the web app.
+- Project workflow was re-designed: original media images where placed in `/media`, source files in `/src` and the production site was finally delivered in `/dist`. A [Gulp](https://gulpjs.com/) script takes care of all the building and debugging operations.
+- Restaurant pictures are delivered in [WebP](https://developers.google.com/speed/webp/) format as well as the original JPEG, so browsers capable of using it can take advantage of its performance improvement. To make this possible, the original `img` was replaced by `picture` elements with two `source` components.
+- An [IntersectionObserver](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API) was used to avoid off-screen pictures, specially in small screens. The real image pictures are set and downloaded only when the restaurant `li` element approaches or intersects the display area.
+- Local scripts have been bundled, babelized and minimized.
+- CSS stylesheets have also been optimized, minified and placed as inline `style` elements on the production site.
