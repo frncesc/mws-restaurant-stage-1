@@ -1,14 +1,14 @@
 'use strict';
 
 /**
- * Registers the service worker
+ * Register the service worker
  */
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js');
 }
 
 /**
- * Creates an intersection observer to set the restaurant images on `li`
+ * Create an intersection observer to set the restaurant images on `li`
  * elements only when they are close to the viewport boundaries.
  * See: https://developers.google.com/web/updates/2016/04/intersectionobserver
  */
@@ -40,61 +40,48 @@ self.map = null;
 self.markers = [];
 
 /**
- * Fetches all neighborhoods and fills the neighborhood list.
+ * Fetches all neighborhoods and builds the neighborhoods list.
  * @returns {Promise} - Resolves with an array of strings
  */
-self.fetchNeighborhoods = () => {
+self.fetchAndFillNeighborhoods = () => {
+  const select = document.getElementById('neighborhoods-select');
   return DBHelper.fetchNeighborhoods()
     .then(neighborhoods => {
       self.neighborhoods = neighborhoods;
-      self.fillNeighborhoodsHTML(neighborhoods);
+      if (neighborhoods)
+      neighborhoods.forEach(neighborhood => {
+        const option = document.createElement('option');
+        option.innerHTML = neighborhood;
+        option.value = neighborhood;
+        select.append(option);
+      });
       return neighborhoods;
     })
 }
 
 /**
- * Builds the neighborhoods list:
- */
-self.fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
-  const select = document.getElementById('neighborhoods-select');
-  if (neighborhoods)
-    neighborhoods.forEach(neighborhood => {
-      const option = document.createElement('option');
-      option.innerHTML = neighborhood;
-      option.value = neighborhood;
-      select.append(option);
-    });
-}
-
-/**
- * Fetches all cuisines and builds the list.
+ * Fetches all cuisines and builds the cuisines list.
  * @returns {Promise} - Resolves with an array of strings
  */
-self.fetchCuisines = () => {
+self.fetchAndFillCuisines = () => {
+  const select = document.getElementById('cuisines-select');
   return DBHelper.fetchCuisines()
     .then(cuisines => {
       self.cuisines = cuisines;
-      self.fillCuisinesHTML(cuisines);
+      if (cuisines)
+        cuisines.forEach(cuisine => {
+          const option = document.createElement('option');
+          option.innerHTML = cuisine;
+          option.value = cuisine;
+          select.append(option);
+        });
       return cuisines;
     })
 }
 
 /**
- * Fills the list of cuisines.
- */
-self.fillCuisinesHTML = (cuisines = self.cuisines) => {
-  const select = document.getElementById('cuisines-select');
-  if (cuisines)
-    cuisines.forEach(cuisine => {
-      const option = document.createElement('option');
-      option.innerHTML = cuisine;
-      option.value = cuisine;
-      select.append(option);
-    });
-}
-
-/**
  * Updates the list and the map with the current restaurants
+ * @param {boolean} updateMap - Uses a real Google Maps object when `true`, or a static image otherwise
  * @returns {Promise} - Resolves with an array of `restaurant` objects
  */
 self.updateRestaurants = (updateMap = true) => {
@@ -126,6 +113,7 @@ self.updateRestaurants = (updateMap = true) => {
 
 /**
  * Clears the current restaurant list and removes the map markers
+ * @param {Object[]} restaurants - The current collection of restaurants
  */
 self.resetRestaurants = (restaurants) => {
   // Remove all restaurants
@@ -141,6 +129,7 @@ self.resetRestaurants = (restaurants) => {
 
 /**
  * Creates all restaurants HTML and add them to the webpage
+ * @param {Object[]} restaurants - The current collection of restaurants
  */
 self.fillRestaurantsHTML = (restaurants = self.restaurants) => {
   const ul = document.getElementById('restaurants-list');
@@ -154,6 +143,8 @@ self.fillRestaurantsHTML = (restaurants = self.restaurants) => {
 
 /**
  * Create a single restaurant HTML element
+ * @param {Object} restaurant - The restaurant data
+ * @returns {HTMLElement} - The "li" element created
  */
 self.createRestaurantHTML = (restaurant) => {
 
@@ -203,6 +194,7 @@ self.createRestaurantHTML = (restaurant) => {
 /**
  * Sets the real sources and images of a restaurant `picture` element
  * Should be called by IntersectionObserver when the element approaches or intersects the viewport
+ * @param {HTMLElement} li - The "li" element where the picture should be placed
  */
 self.setPictureForRestaurant = (li) => {
 
@@ -239,7 +231,8 @@ self.setPictureForRestaurant = (li) => {
 }
 
 /**
- * Adds markers for current restaurants on the map.
+ * Adds markers on the map for the current restaurants.
+ * @param {Object[]} restaurants - The current collection of restaurants
  */
 self.addMarkersToMap = (restaurants = self.restaurants) => {
   if (restaurants && self.map) {
@@ -255,7 +248,7 @@ self.addMarkersToMap = (restaurants = self.restaurants) => {
 }
 
 /**
- * Resets the restaurant markers
+ * Resets all the restaurant markers
  */
 self.resetMarkers = () => {
   // Remove all map markers
@@ -265,7 +258,7 @@ self.resetMarkers = () => {
 }
 
 /**
- * Loads the GoogleMaps script
+ * Loads the "real" Google Maps script
  */
 self.loadGoogleMaps = () => {
   if (!self.mapScript) {
@@ -278,9 +271,9 @@ self.loadGoogleMaps = () => {
 }
 
 /**
- * Arms the event listeners that will load the real Google Map
- * when the user clicks on the static map image or when
- * the restaurant filter changes.
+ * Arms the event listeners that will load the real Google Maps object when a click is done on the static map image
+ * or the restaurant filtering criteria changed.
+ * Click and tap events on the static map image are also checked to determine if they are placed on a specific restaurant marker
  */
 self.setStaticMapListeners = () => {
   const mapContainer = document.getElementById('map');
@@ -334,8 +327,8 @@ self.setStaticMapListeners = () => {
 }
 
 /**
- * Initializes the Google Maps object.
- * Called from mapScript.
+ * Initializes the Google Maps object
+ * (function called from mapScript)
  */
 window.initMap = () => {
   let loc = {
@@ -367,14 +360,11 @@ window.initMap = () => {
  * as soon as the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', (event) => {
-
   self.setStaticMapListeners();
-
-  self.fetchNeighborhoods()
-    .then(fetchCuisines)
+  self.fetchAndFillNeighborhoods()
+    .then(self.fetchAndFillCuisines)
     .then(() => {
       updateRestaurants(false);
       DBHelper.setOfflineEventHandler();
     });
-
 });

@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Registers the service worker
+ * Register the service worker
  */
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js');
@@ -75,6 +75,7 @@ self.fetchRestaurantFromURL = () => {
 
 /**
  * Creates the restaurant HTML and adds it to the webpage
+ * @param {Object} restaurant - The restaurant data
  */
 self.fillRestaurantHTML = (restaurant = self.restaurant) => {
   const name = document.getElementById('restaurant-name');
@@ -115,6 +116,7 @@ self.fillRestaurantHTML = (restaurant = self.restaurant) => {
 
 /**
  * Creates the restaurant operating hours HTML table and adds it to the webpage.
+ * @param {Object} operatingHours  - Object with days as keys and operating hours as values
  */
 self.fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => {
   const hours = document.getElementById('restaurant-hours');
@@ -135,6 +137,7 @@ self.fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours
 
 /**
  * Creates all reviews HTML and adds them to the webpage.
+ * @param {Object[]} reviews - An array of objects of type "review"
  */
 self.fillReviewsHTML = (reviews = self.restaurant.reviews) => {
   const container = document.getElementById('reviews');
@@ -160,6 +163,8 @@ self.fillReviewsHTML = (reviews = self.restaurant.reviews) => {
 
 /**
  * Creates a single review HTML and adds it to the webpage.
+ * @param {Object} review - An object of type review
+ * @param {number} pos - The relative position of this review on the restaurant reviews array
  */
 self.createReviewHTML = (review, pos) => {
   const article = document.createElement('article');
@@ -205,6 +210,7 @@ self.createReviewHTML = (review, pos) => {
 
 /**
  * Adds the restaurant name to the breadcrumb navigation menu
+ * @param {Object} restaurant - The current restaurant data
  */
 self.fillBreadcrumb = (restaurant = self.restaurant) => {
   const breadcrumb = document.getElementById('breadcrumb');
@@ -216,10 +222,11 @@ self.fillBreadcrumb = (restaurant = self.restaurant) => {
 
 /**
  * Gets a parameter by name from page URL.
+ * @param {string} name - The parameter to search for
+ * @param {string} url - The URL to parse
+ * @returns {string} - The value passed on the query string with the given name, if any.
  */
-self.getParameterByName = (name, url) => {
-  if (!url)
-    url = window.location.href;
+self.getParameterByName = (name, url = window.location.href) => {
   name = name.replace(/[\[\]]/g, '\\$&');
   const regex = new RegExp(`[?&]${name}(=([^&#]*)|&|#|$)`),
     results = regex.exec(url);
@@ -241,7 +248,7 @@ self.clearReviewForm = () => {
 };
 
 /**
- * Shows the form used to add and edit reviews
+ * Cleans and makes visible the form used to add and edit reviews
  */
 self.showReviewForm = () => {
   self.hideReviewForm();
@@ -251,7 +258,7 @@ self.showReviewForm = () => {
 };
 
 /**
- * Hides the form used to add and edit reviews
+ * Hides and resets to its original place the form used to add and edit reviews
  */
 self.hideReviewForm = () => {
   self.reviewFormArticle.classList.add('hidden');
@@ -264,8 +271,8 @@ self.hideReviewForm = () => {
 };
 
 /**
- * Handles clicks on the form "OK" button
- * @param {Event} ev 
+ * Handles clicks on the "Post review" button
+ * @param {Event} ev - The event that triggered this action
  */
 self.reviewFormOk = (ev) => {
   const data = {
@@ -303,8 +310,8 @@ self.reviewFormOk = (ev) => {
 };
 
 /**
- * Handles clicks on review "edit" buttons
- * @param {Event} ev 
+ * Handles clicks on "Edit review" buttons
+ * @param {Event} ev - The event that triggered this action
  */
 self.editReview = (ev) => {
   const reviewArticle = ev.target.parentElement;
@@ -319,7 +326,7 @@ self.editReview = (ev) => {
     self.editRating.value = review.rating;
     self.editComments.value = review.comments;
 
-    // Hide review article and place form at its location
+    // Hide the review article and replace it by the form
     reviewArticle.classList.add('hidden');
     reviewArticle.insertAdjacentElement('afterend', self.reviewFormArticle);
     self.reviewFormArticle.classList.remove('hidden');
@@ -329,8 +336,8 @@ self.editReview = (ev) => {
 }
 
 /**
- * Handles clicks on review "delete" buttons
- * @param {Event} ev 
+ * Handles clicks on "Delete review" buttons
+ * @param {Event} ev - The event that triggered this action
  */
 self.deleteReview = (ev) => {
   const reviewArticle = ev.target.parentElement;
@@ -366,18 +373,21 @@ document.addEventListener('DOMContentLoaded', (event) => {
   self.editRating = self.reviewFormArticle.querySelector('#edit-rating');
   self.editComments = self.reviewFormArticle.querySelector('#edit-comments');
   self.addReviewBtn = document.querySelector('#add-review');
-  self.addReviewBtn.addEventListener('click', self.showReviewForm);
   self.formOkBtn = document.querySelector('#form-ok');
-  self.formOkBtn.addEventListener('click', self.reviewFormOk);
   self.formCancelBtn = document.querySelector('#form-cancel');
+
+  // Set event listeners to action buttons
+  self.addReviewBtn.addEventListener('click', self.showReviewForm);
+  self.formOkBtn.addEventListener('click', self.reviewFormOk);
   self.formCancelBtn.addEventListener('click', self.hideReviewForm);
 
+  // Load the requested restaurant data and fill-in the page
   self.fetchRestaurantFromURL()
     .then(restaurant => {
       // Check if Maps API is already loaded
       if (window.google && window.google.maps)
         self.initMap();
-      // Set off-line handlers
+      // Set off-line event handler
       DBHelper.setOfflineEventHandler();
     });
 });

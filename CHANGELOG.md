@@ -11,7 +11,20 @@
 
 - Set a __title__ attribute to the `iframe` containing the Google Maps object. This is a [critical WCAG rule](https://dequeuniversity.com/rules/axe/2.2/frame-title?application=lighthouse) not currently respected by Google Maps.
 
-- Use of [Material Design Components](https://material.io/develop/web/) to display snackbars and form controls.
+- Use of [Material Design Components](https://material.io/develop/web/) to display the "snack bar".
+
+### Allow to favorite/unfavorite restaurants and post, edit and delete reviews, also when off-line
+- Place a _Favorite_ toggleable icon in each restaurant card, and in the restaurant page.
+- Create a a form in `restaurant.html`, initially hidden.
+- Place _Edit_ and _Delete_ buttons in each review.
+- Place a _Post a new review_ button at the end of the reviews list.
+- Link events triggered by these UI elements to a new method called `DBHelper.performAction`. This function accepts calls for four different types of actions (`SET_FAVORITE`, `ADD_REVIEW`, `EDIT_REVIEW` and `DELETE_REVIEW`), and performs three operations:
+  - Saves the changes on the IDB for later use, also when the device is off-line.
+  - When on-line, calls the API server with the appropiate method and data.
+  - When the device is off-line or the call to the API server was unsuccessfull, the requested action data is stored in a special IDB object called `pending_actions`, for later processing.
+- Implement `DBHelper.flushPendingActions` to check if there are pending actions registered on the IDB and try to process them when the device is on-line. This method is called at the beggining of each page view, and when an [`online`](https://developer.mozilla.org/en-US/docs/Web/API/NavigatorOnLine/Online_and_offline_events) event is fired. In case of error when contacting the API server, the method is retried after a while (currently 20").
+- Use of the snackbar to inform the users about the state of pending actions.
+- Add an third drop-down list to the filtering section of `index.html`, allowing to select all restaurants or just "_My favorites_".
 
 ## STAGE 2
 
