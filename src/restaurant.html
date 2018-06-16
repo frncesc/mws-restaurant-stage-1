@@ -74,18 +74,18 @@
         <header>
           <div id="review-form-title">Add review</div>
         </header>
-        <form id="review-form">
+        <form id="review-form" aria-labelledby="review-form-title">
           <label for="edit-name">Your name: </label>
           <input type="text" id="edit-name" />
           <label for="edit-rating">Rating: </label>
           <div>
             <select id="edit-rating">
-              <option value="0">-- not rated --</option>
-              <option value="1">&starf;</option>
-              <option value="2">&starf;&starf;</option>
-              <option value="3">&starf;&starf;&starf;</option>
-              <option value="4">&starf;&starf;&starf;&starf;</option>
-              <option value="5">&starf;&starf;&starf;&starf;&starf;</option>
+              <option value="0" aria-label="not rated">-- not rated --</option>
+              <option value="1" aria-label="1 star">&starf;</option>
+              <option value="2" aria-label="2 stars">&starf;&starf;</option>
+              <option value="3" aria-label="3 stars">&starf;&starf;&starf;</option>
+              <option value="4" aria-label="4 stars">&starf;&starf;&starf;&starf;</option>
+              <option value="5" aria-label="5 stars (maximum rate)">&starf;&starf;&starf;&starf;&starf;</option>
             </select>
           </div>
           <div class="wide">
@@ -110,15 +110,6 @@
     </a> All Rights Reserved.
   </footer>
   <!-- End footer -->
-
-  <!-- Snackbar -->
-  <div class="mdc-snackbar" aria-live="assertive" aria-atomic="true" aria-relevant="text" aria-hidden="true">
-    <div class="mdc-snackbar__text"></div>
-    <div class="mdc-snackbar__action-wrapper">
-      <button type="button" class="mdc-snackbar__action-button"></button>
-    </div>
-  </div>
-  <!-- End snackbar -->
 
   <!-- Beginning scripts -->
   <!-- build:dist-restaurant -->

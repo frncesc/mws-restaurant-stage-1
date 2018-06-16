@@ -19,11 +19,11 @@
     } else {
         root.Snackbar = factory();
     }
-/**
- * >>> Modified 01-Jun-18 by Francesc Busquets <francesc@gmail.com>
- * `this` changed to `self` to avoid Babel's conversion to `undefined` due to `use strict` mode
- */
+// >> Modified 16-Jun-18 by Francesc Busquets <francesc@gmail.com>
+// >> `this` changed to `self` to avoid Babel's conversion to `undefined` due to `use strict` mode
 })(/* this */ self, function () {
+// >> Modification end
+
     var Snackbar = {};
 
     Snackbar.current = null;
@@ -66,6 +66,14 @@
 
         Snackbar.snackbar = document.createElement('div');
         Snackbar.snackbar.className = 'snackbar-container ' + options.customClass;
+
+        // >> Modified 16-Jun-18 by Francesc Busquets <francesc@gmail.com>
+        // >> Set accessibility properties
+        Snackbar.snackbar.setAttribute('aria-live', 'assertive');
+        Snackbar.snackbar.setAttribute('aria-atomic', 'true');
+        Snackbar.snackbar.setAttribute('aria-relevant', 'text');
+        // >> Modification end
+
         Snackbar.snackbar.style.width = options.width;
         var $p = document.createElement('p');
         $p.style.margin = 0;
