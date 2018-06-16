@@ -56,40 +56,6 @@ https://clic.saltamarges.org/api/test/index.html
 
 ---
 
-## Building the site components
-
-This project uses [Node.js](https://nodejs.org) and [NPM packages](https://www.npmjs.com/) to prepare and serve different components on the development environment. Please refer to the [Node.js downloads page](https://nodejs.org/en/download/) for more information about how to install Node.js and NPM on different platforms.
-
-To download and install the project's required components, just go to its root folder and launch:
-
-```
-$ npm install
-```
-
-The site uses restaurant pictures scaled to different resolutions to match the requirements of each device and minimize download sizes and waiting times. All these variants of the images are built automatically. To build the production site in `dist` just launch:
-
-```
-$ npm run build
-```
-
-To start the application, make sure that the [API server](https://github.com/udacity/mws-restaurant-stage-2) is working on port 1337, and then launch:
-
-```
-$ npm run serve
-```
-
-This will open your default browser with the project's main page. The site will be automatically reloaded when changes are detected in any media or source file.
-
-To start a debug server based on the source code without CSS or JS optimizations, just launch:
-
-```
-$ npm run debug
-```
-
-The servers are launched by default on ports `8010` (dist) and `8080` (debug), but you can change this settings in `gulpfile.js`
-
----
-
 ## Previous stages
 
 ### Stage 1
@@ -119,3 +85,38 @@ A lot of optimizations where performed to achieve the desired performance in [Li
 - An [IntersectionObserver](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API) was used to avoid off-screen pictures, specially in small screens. The real image pictures are set and downloaded only when the restaurant `li` element approaches or intersects the display area.
 - Local scripts have been bundled, babelized and minimized.
 - CSS stylesheets have also been optimized, minified and placed as inline `style` elements on the production site.
+
+---
+
+## Building the site components
+
+This project uses [Node.js](https://nodejs.org) and [NPM packages](https://www.npmjs.com/) to prepare and serve different components on the development environment. Please refer to the [Node.js downloads page](https://nodejs.org/en/download/) for more information about how to install Node.js and NPM on different platforms.
+
+To download and install the project's required components, just go to its root folder and launch:
+
+```
+$ npm ci
+```
+
+The site uses restaurant pictures scaled to different resolutions to match the requirements of each device and minimize download sizes and waiting times. All these variants of the images are built automatically. To build the production site in `dist` just launch:
+
+```
+$ npm run build
+```
+
+To start the application, make sure that the [API server](https://github.com/udacity/mws-restaurant-stage-2) is working on port 1337, and then launch:
+
+```
+$ npm run serve
+```
+
+This will open your default browser with the project's main page. The site will be automatically reloaded when changes are detected in any media or source file.
+
+To start a debug server based on the source code without CSS or JS optimizations, just launch:
+
+```
+$ npm run debug
+```
+
+The servers are launched by default on ports `8010` (dist) and `8080` (debug), but you can change this settings in `gulpfile.js`
+
