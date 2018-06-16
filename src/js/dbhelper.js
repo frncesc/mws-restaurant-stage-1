@@ -97,7 +97,7 @@ class DBHelper {
    * @type {string}
    */
   static get WAIT_MESSAGE() {
-    return 'Can\'t contact the server now. Will retry later';
+    return 'Can not connect with the server. Will be retried later';
   }
 
   /**
@@ -201,7 +201,6 @@ class DBHelper {
         // Update data on IDB
         idbPromise = idbPromise.then(rest => {
           rest.is_favorite = data.favorite;
-          rest.updatedAt = Date.now();
           return rest;
         });
         break;
@@ -219,7 +218,6 @@ class DBHelper {
         idbPromise = idbPromise.then(rest => {
           rest.reviews = rest.reviews || [];
           rest.reviews.push(data);
-          //rest.updatedAt = Date.now();
           return rest;
         });
         break;
@@ -240,7 +238,6 @@ class DBHelper {
           const n = rest.reviews.findIndex(rv => rv.id === data.id);
           if (n >= 0) {
             rest.reviews[n] = data;
-            //rest.updatedAt = Date.now();
             return rest;
           } else
             throw new Error(`Review #${data.id} not found in restaurant #${data.restaurant_id} on IDB`);
@@ -263,7 +260,6 @@ class DBHelper {
           const n = rest.reviews.findIndex(rv => rv.id === data.id);
           if (n >= 0) {
             rest.reviews.splice(n, 1);
-            //rest.updatedAt = Date.now();
             return rest;
           } else
             throw new Error(`Review #${data.id} not found in restaurant #${data.restaurant_id} on IDB`);
@@ -275,8 +271,11 @@ class DBHelper {
         return Promise.reject(`Unknown action: ${type}`);
     }
 
-    // Save modificated data to IDB and return promise
-    return idbPromise.then(rest => DBHelper.saveRestaurantToIdb(rest));
+    // Save modifications to IDB
+    return idbPromise.then(rest => {
+      rest.updatedAt = Date.now();
+      return DBHelper.saveRestaurantToIdb(rest)
+    });
   }
 
   /**
@@ -444,7 +443,7 @@ class DBHelper {
         let update = !currentData;
         if (!update && restaurant) {
           // First check: is 'restaurant' newer than 'currentData'?
-          update = restaurant.updatedAt > currentData.updatedAt;
+          update = restaurant.updatedAt > currentData.updatedAt || restaurant.is_favorite !== currentData.is_favorite;
           // Second check: does 'restaurant' have reviews?
           if (!update && restaurant.reviews) {
             if (!currentData.reviews)
