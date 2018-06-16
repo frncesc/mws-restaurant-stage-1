@@ -255,6 +255,7 @@ self.showReviewForm = () => {
   self.clearReviewForm();
   self.reviewFormArticle.classList.remove('hidden');
   self.addReviewBtn.classList.add('hidden');
+  self.reviewFormArticle.scrollIntoView(false);
 };
 
 /**
